@@ -133,7 +133,7 @@ async def get_settings(ctx, event='all'):
         sql = 'SELECT * FROM settings_guild where guild_id=?'
     elif event == 'arena':
         sql = 'SELECT arena_enabled, arena_role_id, arena_message FROM settings_guild where guild_id=?'
-    elif event == 'boss':
+    elif event == 'legendary-boss':
         sql = 'SELECT boss_enabled, boss_role_id, boss_message FROM settings_guild where guild_id=?'
     elif event == 'catch':
         sql = 'SELECT catch_enabled, catch_role_id, catch_message FROM settings_guild where guild_id=?'
@@ -897,8 +897,6 @@ async def on_message(message):
                 event = 'arena'
             elif message_content.find('Type `fight` to help and get a reward!') > -1:
                 event = 'miniboss'
-            elif message_content.find('FlyingPanda HAS KILLED THE GODLY DRAGON') > -1:
-                await message.channel.send('DO NOT FORGET TO CLAIM THE A15 BADGE :heart:')
             
             if not event == '':
                 event_settings = await get_settings(message, event)
