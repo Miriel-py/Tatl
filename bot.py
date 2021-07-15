@@ -145,6 +145,8 @@ async def get_settings(ctx, event='all'):
         sql = 'SELECT miniboss_enabled, miniboss_role_id, miniboss_message FROM settings_guild where guild_id=?'
     elif event == 'lootbox':
         sql = 'SELECT summon_enabled, summon_role_id, summon_message FROM settings_guild where guild_id=?'
+    elif event == 'rumble-royale':
+        sql = 'SELECT rumble_enabled, rumble_role_id, rumble_message FROM settings_guild where guild_id=?'
     
     try:
         cur=erg_db.cursor()
@@ -200,6 +202,9 @@ async def set_event_role(ctx, event_role, event):
     elif event == 'lootbox':
         event = 'lootbox summoning'
         sql = 'UPDATE settings_guild SET summon_role_id = ? WHERE guild_id = ?'
+    elif event == 'rumble-royale':
+        event = 'rumble royale'
+        sql = 'UPDATE settings_guild SET rumble_role_id = ? WHERE guild_id = ?'
     
     try:
         if event_role in (0,1):
@@ -256,6 +261,9 @@ async def set_event_message(ctx, event_message, event):
     elif event == 'lootbox':
         event = 'lootbox summoning'
         sql = 'UPDATE settings_guild SET summon_message = ? WHERE guild_id = ?'
+    elif event == 'rumble-royale':
+        event = 'rumble royale'
+        sql = 'UPDATE settings_guild SET rumble_message = ? WHERE guild_id = ?'
     
     try:        
         cur=erg_db.cursor()
@@ -331,6 +339,8 @@ async def set_specific_event(ctx, event, action):
         column = 'boss_enabled'
     elif event == 'miniboss':
         column = 'miniboss_enabled'
+    elif event == 'rumble-royale':
+        column = 'rumble_enabled'
     
     else:
         await log_error(ctx, f'Invalid event {event} in \'set_specific_event\'')
@@ -349,11 +359,13 @@ async def set_specific_event(ctx, event, action):
                 enabled_db = record[0]
                 if enabled_db != enabled:
                     cur.execute(f'UPDATE settings_guild SET {column} = ? WHERE guild_id = ?', (enabled, ctx.guild.id,))
+                    event = event.replace('-',' ')
                     status = f'**{ctx.author.name}**, {event} alerts are now **{action}d**.'
                 else:
+                    event = event.replace('-',' ')
                     status = f'**{ctx.author.name}**, {event} alerts are already **{action}d**.'
             else:
-                cur.execute(f'UPDATE settings_guild SET arena_enabled = ?, boss_enabled = ?, catch_enabled = ?, chop_enabled = ?, fish_enabled = ?, miniboss_enabled = ?, summon_enabled = ? WHERE guild_id = ?', (enabled, enabled, enabled, enabled, enabled, enabled, enabled, ctx.guild.id,))
+                cur.execute(f'UPDATE settings_guild SET arena_enabled = ?, boss_enabled = ?, catch_enabled = ?, chop_enabled = ?, fish_enabled = ?, miniboss_enabled = ?, summon_enabled = ?, rumble_enabled = ? WHERE guild_id = ?', (enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, ctx.guild.id,))
                 status = f'**{ctx.author.name}**, all event alerts are now **{action}d**.'
         else:
             status = f'**{ctx.author.name}**, you have never used the bot on this server before. Please try again.'
@@ -566,9 +578,12 @@ async def settings(ctx):
             summon_enabled = settings[20]
             summon_role_id = settings[21]
             summon_message = settings[22]
+            rumble_enabled = settings[23]
+            rumble_role_id = settings[24]
+            rumble_message = settings[25]
             
-            events_enabled = [arena_enabled, boss_enabled, catch_enabled, chop_enabled, fish_enabled, miniboss_enabled, summon_enabled]
-            event_roles = [arena_role_id, boss_role_id, catch_role_id, chop_role_id, fish_role_id, miniboss_role_id, summon_role_id]
+            events_enabled = [arena_enabled, boss_enabled, catch_enabled, chop_enabled, fish_enabled, miniboss_enabled, summon_enabled, rumble_enabled]
+            event_roles = [arena_role_id, boss_role_id, catch_role_id, chop_role_id, fish_role_id, miniboss_role_id, summon_role_id, rumble_role_id]
                         
             for index in range(len(events_enabled)):
                 event_enabled = events_enabled[index]
@@ -600,6 +615,8 @@ async def settings(ctx):
             miniboss_role = event_roles[5]
             summon_enabled = events_enabled[6]
             summon_role = event_roles[6]
+            rumble_enabled = events_enabled[7]
+            rumble_role = event_roles[7]
             
             if arena_message == None:
                 arena_message = global_data.arena_message
@@ -615,6 +632,8 @@ async def settings(ctx):
                 miniboss_message = global_data.miniboss_message
             if summon_message == None:
                 summon_message = global_data.summon_message
+            if rumble_message == None:
+                rumble_message = global_data.rumble_message
         
             settings_arena = (
                 f'{emojis.bp} Alerts: `{arena_enabled}`\n'
@@ -657,6 +676,12 @@ async def settings(ctx):
                 f'{emojis.bp} Ping role: {summon_role}\n'
                 f'{emojis.bp} Message: {summon_message}'
             )
+            
+            settings_rumble = (
+                f'{emojis.bp} Alerts: `{rumble_enabled}`\n'
+                f'{emojis.bp} Ping role: {rumble_role}\n'
+                f'{emojis.bp} Message: {rumble_message}'
+            )
         
             embed = discord.Embed(
                 color = global_data.color,
@@ -669,6 +694,7 @@ async def settings(ctx):
             embed.add_field(name='LEGENDARY BOSS', value=settings_boss, inline=False)
             embed.add_field(name='LOOTBOX SUMMONING', value=settings_summon, inline=False)
             embed.add_field(name='MINIBOSS', value=settings_miniboss, inline=False)
+            embed.add_field(name='RUMBLE ROYALE', value=settings_rumble, inline=False)
         
             await ctx.reply(embed=embed, mention_author=False)
 
@@ -866,17 +892,20 @@ async def messages(ctx, *args):
 # Event alerts
 @bot.event
 async def on_message(message):
-    if message.author.id == 555955826880413696:
+    if message.author.id in (555955826880413696,693167035068317736):
         if message.embeds:
             try:
                 message_description = str(message.embeds[0].description)
-                message_title = str(message.embeds[0].title)
-                try:
-                    message_fields = str(message.embeds[0].fields)
-                except:
-                    message_fields = ''
             except:
-                return
+                message_description = ''
+            try:
+                message_title = str(message.embeds[0].title)
+            except:
+                message_title = ''
+            try:
+                message_fields = str(message.embeds[0].fields)
+            except:
+                message_fields = ''
             
             message_content = f'Description: {message_description}\nTitle: {message_title}\nFields: {message_fields}'
             logger.debug(f'Event detection: {message_content}')
@@ -897,6 +926,8 @@ async def on_message(message):
                 event = 'arena'
             elif message_content.find('Type `fight` to help and get a reward!') > -1:
                 event = 'miniboss'
+            elif message_content.find('Click the emoji below to join') > -1:
+                event = 'rumble-royale'
             
             if not event == '':
                 event_settings = await get_settings(message, event)
@@ -919,6 +950,8 @@ async def on_message(message):
                         event_message = global_data.arena_message
                     elif event == 'miniboss':
                         event_message = global_data.miniboss_message
+                    elif event == 'rumble-royale':
+                        event_message = global_data.rumble_message
                 
                 if event_enabled == 1:
                     if not event_role_id == 0:

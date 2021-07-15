@@ -23,9 +23,10 @@ chop_message = f'Type **`CHOP`** to get {emojis.event_chop} logs!'
 fish_message = f'Type **`FISH`** to get {emojis.event_fish} fish!'
 miniboss_message = f'Type **`FIGHT`** to defeat the {emojis.event_miniboss} miniboss!'
 summon_message = f'Type **`SUMMON`** to get a {emojis.event_summon} lootbox!'
+rumble_message = f'Click :crossed_swords: to join the rumble royale!'
 
 # All events
-events = ['all','arena','catch','chop','fish','legendary-boss','lootbox','miniboss',]
+events = ['all','arena','catch','chop','fish','legendary-boss','lootbox','miniboss','rumble-royale']
 event_aliases = {
     'legendary': 'legendary-boss',
     'boss': 'legendary-boss',
@@ -53,7 +54,11 @@ event_aliases = {
     'coin-rain': 'catch',
     'join': 'arena',
     'fight': 'miniboss',
-    'mb': 'miniboss'
+    'mb': 'miniboss',
+    'rr': 'rumble-royale',
+    'hg': 'rumble-royale',
+    'rumble': 'rumble-royale',
+    'royale': 'rumble-royale'
 }
 
 # Embed color
