@@ -124,7 +124,7 @@ async def get_prefix_all(bot: commands.Bot, ctx: commands.Context) -> Tuple:
     return commands.when_mentioned_or(*prefixes)(bot, ctx)
 
 
-async def get_guild(ctx_or_guild: [commands.Context, discord.Guild]) -> Guild:
+async def get_guild(ctx_or_guild: Union[commands.Context, discord.Guild]) -> Guild:
     """Gets all guild settings.
 
     Returns

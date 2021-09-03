@@ -249,6 +249,48 @@ class SettingsCog(commands.Cog):
         if message_result == '': message_result = message_syntax
         await ctx.reply(message_result, mention_author=False)
 
+    @commands.command(name='flex-channel', aliases=('channel','flex',))
+    @commands.has_permissions(manage_guild=True)
+    @commands.bot_has_permissions(send_messages=True, read_message_history=True)
+    async def flex_channel(self, ctx: commands.Context, *args: str) -> None:
+        """Sets/resets the auto flex channel"""
+        def check(message):
+            return message.author == ctx.author and message.channel == ctx.channel
+
+        prefix = ctx.prefix
+        syntax = f'{prefix}flex-channel <#channel>'
+        message_syntax = (
+            f'{strings.MSG_SYNTAX.format(syntax=syntax)}'
+        )
+
+        if args:
+            channel_id = args[0].replace('<#','').replace('>','')
+            try:
+                channel_id = int(channel_id)
+            except:
+                await ctx.reply(f'Invalid channel.\n{message_syntax}', mention_author=False)
+                return
+            channel = ctx.guild.get_channel(channel_id)
+            if channel is None:
+                await ctx.reply(f'Invalid channel.\n{message_syntax}', mention_author=False)
+                return
+
+        if not args:
+            await ctx.reply(f'**{ctx.author.name}**, do you want to set the current channel as the auto flex channel? [`yes/no`]', mention_author=False)
+            try:
+                answer = await self.bot.wait_for('message', check=check, timeout=60)
+            except asyncio.TimeoutError as error:
+                await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+                return
+            if answer.content.lower() in ('yes','y'):
+                channel = ctx.channel
+            else:
+                await ctx.send('Aborted.')
+                return
+
+        await database.update_guild(ctx, auto_flex_channel_id=channel.id)
+        await ctx.send(f'Changed the auto flex channel to `{channel.name}`')
+
 
 # Initialization
 def setup(bot):
