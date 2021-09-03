@@ -1,19 +1,13 @@
 # main.py
 """Contains error handling and the help and about commands"""
 
-import aiohttp
 from datetime import datetime
-import gettext
-from typing import Tuple
 
 import discord
 from discord.ext import commands, tasks
 
 import database
-from resources import emojis, exceptions, logs, settings, strings
-
-
-_ = gettext.gettext
+from resources import emojis, exceptions, logs, settings
 
 
 class MainCog(commands.Cog):
@@ -21,27 +15,26 @@ class MainCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-        # Commands
-    @commands.command(name='help',aliases=('guide','g','h',))
+    # Commands
+    @commands.command(name='help',aliases=('h',))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def main_help(self, ctx: commands.Context):
+    async def main_help(self, ctx: commands.Context) -> None:
         """Main help command"""
-        prefix = await database.get_prefix(ctx)
         embed = await embed_main_help(ctx)
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed, mention_author=False)
 
     @commands.command(aliases=('statistic','statistics,','devstat','ping','devstats','info','stats'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def about(self, ctx: commands.Context):
         """Shows some bot info"""
         start_time = datetime.utcnow()
-        message = await ctx.send(_('Testing API latency...'))
+        message = await ctx.reply('Testing API latency...', mention_author=False)
         end_time = datetime.utcnow()
         api_latency = end_time - start_time
         embed = await embed_about(self.bot, ctx, api_latency)
         await message.edit(content=None, embed=embed)
 
-    # Events
+     # Events
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: Exception) -> None:
         """Runs when an error occurs and handles them accordingly.
@@ -49,17 +42,15 @@ class MainCog(commands.Cog):
         """
         async def send_error() -> None:
             """Sends error message as embed"""
-            embed = discord.Embed(title=_('An error occured'))
-            embed.add_field(name=_('Command'), value=f'`{ctx.command.qualified_name}`', inline=False)
-            embed.add_field(name=_('Error'), value=f'```py\n{error}\n```', inline=False)
+            embed = discord.Embed(title='An error occured')
+            embed.add_field(name='Command', value=f'`{ctx.command.qualified_name}`', inline=False)
+            embed.add_field(name='Error', value=f'```py\n{error}\n```', inline=False)
             await ctx.send(embed=embed)
 
-        if isinstance(error, (commands.CommandNotFound, exceptions.FirstTimeUserError, commands.NotOwner)):
+        if isinstance(error, (commands.CommandNotFound, commands.NotOwner)):
             return
         elif isinstance(error, commands.DisabledCommand):
-            await ctx.send(
-                _('Command `{cmd_name}` is temporarily disabled.').format(cmd_name=ctx.command.qualified_name)
-            )
+            await ctx.send(f'Command `{ctx.command.qualified_name}` is temporarily disabled.')
         elif isinstance(error, (commands.MissingPermissions, commands.MissingRequiredArgument,
                                 commands.TooManyArguments, commands.BadArgument)):
             await send_error()
@@ -72,34 +63,32 @@ class MainCog(commands.Cog):
                 await send_error()
         else:
             await database.log_error(error, ctx)
-            if settings.DEBUG_MODE:
-                await send_error()
-            else:
-                await ctx.send(strings.MSG_ERROR)
+            await send_error()
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
         """Fires when bot has finished starting"""
-        #DiscordComponents(bot)
         startup_info = f'{self.bot.user.name} has connected to Discord!'
         print(startup_info)
         logs.logger.info(startup_info)
-        await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening,
-                                                                 name='your questions'))
-        await self.update_stats.start()
+        await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
+                                                                 name='your events'))
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild) -> None:
-        """Sends welcome message on guild join"""
+        """Fires when bot joins a guild. Sends a welcome message to the system channel."""
         try:
-            prefix = await database.get_prefix(self.bot, guild)
-            welcome_message = _(
-                'Hello **{guild_name}**! I\'m here to provide some guidance!\n\n'
-                'To get a list of all topics, type `{prefix}guide` (or `{prefix}g` for short).\n'
-                'If you don\'t like this prefix, use `{prefix}setprefix` to change it.\n\n'
-                'Tip: If you ever forget the prefix, simply ping me with a command.'
+            guild_settings = database.Guild
+            guild_settings = await database.get_guild(guild)
+            prefix = guild_settings.prefix
+            welcome_message = (
+                f'Hey! **{guild.name}**! I\'m here to alert you when an Epic RPG event pops up!\n'
+                f'I\'m also trained in giving you snarky auto flex messages.\n\n'
+                f'Note that all alerts are off by default. Use `{prefix}help` to get started.\n'
+                f'If you don\'t like this prefix, use `{prefix}prefix` to change it.\n\n'
+                f'Tip: If you ever forget the prefix, simply ping me with a command.'
             )
-            await guild.system_channel.send(welcome_message.format(guild_name=guild.name, prefix=prefix))
+            await guild.system_channel.send(welcome_message)
         except:
             return
 
@@ -113,69 +102,24 @@ def setup(bot):
 async def embed_main_help(ctx: commands.Context) -> discord.Embed:
     """Main menu embed"""
     prefix = ctx.prefix
+    alert_settings = (
+        f'{emojis.bp} `{prefix}settings` : Show the current settings\n'
+        f'{emojis.bp} `{prefix}enable` / `disable` : Enable/disable alerts\n'
+        f'{emojis.bp} `{prefix}event-role` : Set an event ping role\n'
+        f'{emojis.bp} `{prefix}event-message` : Set an event message'
+        f'{emojis.bp} `{prefix}flex-channel` : Set the auto flex channel'
+    )
+    prefix_settings = (
+        f'{emojis.bp} `{prefix}prefix` : Check/set the bot prefix\n'
+    )
 
-    progress = (
-        f'{emojis.BP} `{prefix}start` : {_("Starter guide for new players")}\n'
-        f'{emojis.BP} `{prefix}areas` / `{prefix}a` : {_("Area guides overview")}\n'
-        f'{emojis.BP} `{prefix}dungeons` / `{prefix}d` : {_("Dungeon guides overview")}\n'
-        f'{emojis.BP} `{prefix}timetravel` / `{prefix}tt` : {_("Time travel guide")}\n'
-        f'{emojis.BP} `{prefix}coolness` : {_("Everything about coolness")}'
-    )
-    crafting = (
-        f'{emojis.BP} `{prefix}craft` : {_("Recipes mats calculator")}\n'
-        f'{emojis.BP} `{prefix}dismantle` / `{prefix}dm` : {_("Dismantling calculator")}\n'
-        f'{emojis.BP} `{prefix}invcalc` / `{prefix}ic` : {_("Inventory calculator")}\n'
-        f'{emojis.BP} `{prefix}drops` : {_("Monster drops")}\n'
-        f'{emojis.BP} `{prefix}enchants` / `{prefix}e` : {_("All possible enchants")}'
-    )
-    animals = (
-        f'{emojis.BP} `{prefix}horse` : {_("Horse guide")}\n'
-        f'{emojis.BP} `{prefix}pet` : {_("Pets guide")}\n'
-    )
-    trading = f'{emojis.BP} `{prefix}trading` : {_("Trading guides overview")}'
-    professions_value = f'{emojis.BP} `{prefix}professions` / `{prefix}pr` : {_("Professions guide")}'
-    guild_overview = f'{emojis.BP} `{prefix}guild` : {_("Guild guide")}'
-    event_overview = f'{emojis.BP} `{prefix}events` : {_("Event guides overview")}'
-    monsters = (
-        f'{emojis.BP} `{prefix}mobs [area]` : {_("List of all monsters in area [area]")}\n'
-        f'{emojis.BP} `{prefix}dailymob` : {_("Where to find the daily monster")}'
-    )
-    gambling_overview = f'{emojis.BP} `{prefix}gambling` : {_("Gambling guides overview")}'
-    misc = (
-        f'{emojis.BP} `{prefix}calc` : {_("A basic calculator")}\n'
-        f'{emojis.BP} `{prefix}codes` : {_("Currently valid redeemable codes")}\n'
-        f'{emojis.BP} `{prefix}duel` : {_("Duelling weapons")}\n'
-        f'{emojis.BP} `{prefix}farm` : {_("Farming guide")}\n'
-        f'{emojis.BP} `{prefix}tip` : {_("A handy dandy random tip")}'
-    )
-    botlinks = (
-        f'{emojis.BP} `{prefix}invite` : {_("Invite me to your server")}\n'
-        f'{emojis.BP} `{prefix}support` : {_("Visit the support server")}\n'
-        f'{emojis.BP} `{prefix}links` : {_("EPIC RPG wiki & support")}'
-    )
-    settings = (
-        f'{emojis.BP} `{prefix}settings` / `{prefix}me` : {_("Check your user settings")}\n'
-        f'{emojis.BP} `{prefix}setprogress` / `{prefix}sp` : {_("Change your user settings")}\n'
-        f'{emojis.BP} `{prefix}prefix` : {_("Check/change the prefix")}'
-    )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = 'EPIC RPG GUIDE',
-        description = _('Hey **{user_name}**, what do you want to know?').format(user_name=ctx.author.name)
+        title = 'TATL',
+        description = 'Ding ding ding!'
     )
-    embed.set_footer(text=_('Note: This is not an official guide bot.'))
-    embed.add_field(name=_('PROGRESS'), value=progress, inline=False)
-    embed.add_field(name=_('CRAFTING'), value=crafting, inline=False)
-    embed.add_field(name=_('HORSE & PETS'), value=animals, inline=False)
-    embed.add_field(name=_('TRADING'), value=trading, inline=False)
-    embed.add_field(name=_('PROFESSIONS'), value=professions_value, inline=False)
-    embed.add_field(name=_('GUILD'), value=guild_overview, inline=False)
-    embed.add_field(name=_('EVENTS'), value=event_overview, inline=False)
-    embed.add_field(name=_('MONSTERS'), value=monsters, inline=False)
-    embed.add_field(name=_('GAMBLING'), value=gambling_overview, inline=False)
-    embed.add_field(name=_('MISC'), value=misc, inline=False)
-    embed.add_field(name=_('LINKS'), value=botlinks, inline=False)
-    embed.add_field(name=_('SETTINGS'), value=settings, inline=False)
+    embed.add_field(name='ALERTS', value=alert_settings, inline=False)
+    embed.add_field(name='PREFIX', value=prefix_settings, inline=False)
 
     return embed
 
@@ -188,26 +132,13 @@ async def embed_about(bot: commands.Bot, ctx: commands.Context, api_latency: dat
         if bot.get_shard(shard_id).is_closed():
             closed_shards += 1
     general = (
-        f'{emojis.BP} {len(bot.guilds):,} {_("servers")}\n'
-        f'{emojis.BP} {user_count:,} {_("users")}\n'
-        f'{emojis.BP} {len(bot.shards):,} {_("shards")} ({closed_shards:,} {_("shards offline")})\n'
-        f'{emojis.BP} {round(bot.latency * 1000):,} ms {_("average latency")}'
-    )
-    current_shard = bot.get_shard(ctx.guild.shard_id)
-    current_shard_status = (
-        f'{emojis.BP} {_("Shard")}: {current_shard.id + 1} of {len(bot.shards):,}\n'
-        f'{emojis.BP} {_("Bot latency")}: {round(current_shard.latency * 1000):,} ms\n'
-        f'{emojis.BP} {_("API latency")}: {round(api_latency.total_seconds() * 1000):,} ms'
+        f'{emojis.BP} {len(bot.guilds):,} servers\n'
+        f'{emojis.BP} {round(bot.latency * 1000):,} ms bot latency\n'
+        f'{emojis.BP} {round(api_latency.total_seconds() * 1000):,} ms API latency'
     )
     creator = f'{emojis.BP} Miriel#0001'
-    thanks = (
-        f'{emojis.BP} FlyingPanda#0328\n'
-        f'{emojis.BP} {_("All the math geniuses in the support server")}'
-    )
-    embed = discord.Embed(color = settings.EMBED_COLOR, title = _('ABOUT EPIC RPG GUIDE'))
-    embed.add_field(name=_('BOT STATS'), value=general, inline=False)
-    embed.add_field(name=_('CURRENT SHARD'), value=current_shard_status, inline=False)
-    embed.add_field(name=_('CREATOR'), value=creator, inline=False)
-    embed.add_field(name=_('SPECIAL THANKS TO'), value=thanks, inline=False)
+    embed = discord.Embed(color = settings.EMBED_COLOR, title = 'ABOUT TATL')
+    embed.add_field(name='BOT STATS', value=general, inline=False)
+    embed.add_field(name='CREATOR', value=creator, inline=False)
 
     return embed

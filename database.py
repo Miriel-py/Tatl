@@ -6,6 +6,7 @@ import itertools
 import sqlite3
 from typing import List, NamedTuple, Optional, Tuple, Union
 
+import discord
 from discord.ext import commands
 
 from resources import exceptions, logs, settings, strings
@@ -123,7 +124,7 @@ async def get_prefix_all(bot: commands.Bot, ctx: commands.Context) -> Tuple:
     return commands.when_mentioned_or(*prefixes)(bot, ctx)
 
 
-async def get_guild(ctx: commands.Context) -> Guild:
+async def get_guild(ctx_or_guild: [commands.Context, discord.Guild]) -> Guild:
     """Gets all guild settings.
 
     Returns
@@ -141,10 +142,16 @@ async def get_guild(ctx: commands.Context) -> Guild:
     function_name = 'get_guild'
     sql = 'SELECT * FROM settings_guild where guild_id=?'
     database_error = '{error}\nFunction: {function}'
+    if isinstance(ctx_or_guild, commands.Context):
+        ctx = ctx_or_guild
+        guild_id = ctx.guild.id
+    else:
+        ctx = None
+        guild_id = ctx_or_guild.id
     try:
         cur = ERG_DB.cursor()
         cur.row_factory = sqlite3.Row
-        cur.execute(sql, (ctx.guild.id,))
+        cur.execute(sql, (guild_id,))
         record = cur.fetchone()
     except sqlite3.Error as error:
         await log_error(
@@ -225,7 +232,10 @@ async def get_guild(ctx: commands.Context) -> Guild:
             summon = summon_settings
         )
     except Exception as error:
-        await log_error(INTERNAL_ERROR_LOOKUP.format(error=error, table=table, function=function_name, record=record))
+        await log_error(
+            INTERNAL_ERROR_LOOKUP.format(error=error, table=table, function=function_name, record=record),
+            ctx
+        )
         raise LookupError
 
     return guild_settings
@@ -299,202 +309,3 @@ async def update_guild(ctx: commands.Context, **kwargs) -> None:
             ctx
         )
         raise
-
-
-
-
-
-
-# Set event role
-async def set_event_role(ctx, event_role, event):
-
-    if event == 'all':
-        sql =   'UPDATE settings_guild SET arena_role_id = ?, boss_role_id = ?, catch_role_id = ?, chop_role_id = ?, fish_role_id = ?,\
-                miniboss_role_id = ?, summon_role_id = ? WHERE guild_id = ?'
-    elif event == 'arena':
-        sql = 'UPDATE settings_guild SET arena_role_id = ? WHERE guild_id = ?'
-    elif event == 'legendary-boss':
-        event = 'legendary boss'
-        sql = 'UPDATE settings_guild SET boss_role_id = ? WHERE guild_id = ?'
-    elif event == 'catch':
-        sql = 'UPDATE settings_guild SET catch_role_id = ? WHERE guild_id = ?'
-    elif event == 'chop':
-        sql = 'UPDATE settings_guild SET chop_role_id = ? WHERE guild_id = ?'
-    elif event == 'fish':
-        sql = 'UPDATE settings_guild SET fish_role_id = ? WHERE guild_id = ?'
-    elif event == 'miniboss':
-        sql = 'UPDATE settings_guild SET miniboss_role_id = ? WHERE guild_id = ?'
-    elif event == 'lootbox':
-        event = 'lootbox summoning'
-        sql = 'UPDATE settings_guild SET summon_role_id = ? WHERE guild_id = ?'
-    elif event == 'rumble-royale':
-        event = 'rumble royale'
-        sql = 'UPDATE settings_guild SET rumble_role_id = ? WHERE guild_id = ?'
-
-    try:
-        if event_role in (0,1):
-            event_role_id = event_role
-        else:
-            event_role_id = event_role.id
-
-        cur=erg_db.cursor()
-        cur.execute('SELECT arena_role_id FROM settings_guild WHERE guild_id=?', (ctx.guild.id,))
-        record = cur.fetchone()
-
-        if record:
-            if event == 'all':
-                cur.execute(sql, (event_role_id, event_role_id, event_role_id, event_role_id, event_role_id, event_role_id, event_role_id, ctx.guild.id,))
-            else:
-                cur.execute(sql, (event_role_id, ctx.guild.id,))
-
-            if not event_role == 0:
-                if event == 'all':
-                    status = f'**{ctx.author.name}**, the role `{event_role.name}` is now set as your ping role for **all** events.'
-                else:
-                    status = f'**{ctx.author.name}**, the role `{event_role.name}` is now set as your ping role for {event} events.'
-            else:
-                if event == 'all':
-                    status = f'**{ctx.author.name}**, the event role for **all** events was reset.\nPlease note that the bot will ping the role `@here` if no other role is set and alerts are enabled.'
-                else:
-                    status = f'**{ctx.author.name}**, the event role for {event} events was reset.\nPlease note that the bot will ping the role `@here` if no other role is set and alerts are enabled.'
-        else:
-            status = f'**{ctx.author.name}**, you have never used the bot on this server before. Please try again.'
-    except sqlite3.Error as error:
-        await log_error(ctx, error)
-
-    return status
-
-# Set event message
-async def set_event_message(ctx, event_message, event):
-
-    if event == 'all':
-        sql =   'UPDATE settings_guild SET arena_message = ?, boss_message = ?, catch_message = ?, chop_message = ?, fish_message = ?,\
-                miniboss_message = ?, summon_message = ? WHERE guild_id = ?'
-    elif event == 'arena':
-        sql = 'UPDATE settings_guild SET arena_message = ? WHERE guild_id = ?'
-    elif event == 'legendary-boss':
-        event = 'legendary boss'
-        sql = 'UPDATE settings_guild SET boss_message = ? WHERE guild_id = ?'
-    elif event == 'catch':
-        sql = 'UPDATE settings_guild SET catch_message = ? WHERE guild_id = ?'
-    elif event == 'chop':
-        sql = 'UPDATE settings_guild SET chop_message = ? WHERE guild_id = ?'
-    elif event == 'fish':
-        sql = 'UPDATE settings_guild SET fish_message = ? WHERE guild_id = ?'
-    elif event == 'miniboss':
-        sql = 'UPDATE settings_guild SET miniboss_message = ? WHERE guild_id = ?'
-    elif event == 'lootbox':
-        event = 'lootbox summoning'
-        sql = 'UPDATE settings_guild SET summon_message = ? WHERE guild_id = ?'
-    elif event == 'rumble-royale':
-        event = 'rumble royale'
-        sql = 'UPDATE settings_guild SET rumble_message = ? WHERE guild_id = ?'
-
-    try:
-        cur=erg_db.cursor()
-        cur.execute('SELECT arena_message FROM settings_guild WHERE guild_id=?', (ctx.guild.id,))
-        record = cur.fetchone()
-
-        if record:
-            if event == 'all':
-                cur.execute(sql, (event_message, event_message, event_message, event_message, event_message, event_message, event_message, ctx.guild.id,))
-            else:
-                cur.execute(sql, (event_message, ctx.guild.id,))
-
-
-            if not event_message == None:
-                if event == 'all':
-                    status = (
-                        f'**{ctx.author.name}**, the alert message for **all** events is now set to the following:\n'
-                        f'{emojis.bp} {event_message}'
-                    )
-                else:
-                    status = (
-                        f'**{ctx.author.name}**, the alert message for {event} events is now set to the following:\n'
-                        f'{emojis.bp} {event_message}'
-                    )
-            else:
-                if event == 'all':
-                    status = (
-                        f'**{ctx.author.name}**, the alert message for **all** events was reset.\n'
-                        f'The bot will use the default alert messages (see `{ctx.prefix}settings`).'
-                    )
-                else:
-                    status = (
-                        f'**{ctx.author.name}**, the alert message for {event} events was reset.\n'
-                        f'The bot will use the default alert message (see `{ctx.prefix}settings`).'
-                    )
-        else:
-            status = f'**{ctx.author.name}**, you have never used the bot on this server before. Please try again.'
-    except sqlite3.Error as error:
-        await log_error(ctx, error)
-
-    return status
-
-# Enable/disable specific event reminders
-async def set_specific_event(ctx, event, action):
-
-    if action == 'enable':
-        enabled = 1
-    elif action == 'disable':
-        enabled = 0
-    else:
-        await log_error(ctx, f'Invalid action {action} in \'set_specific_event\'')
-        if DEBUG_MODE == 'ON':
-            status = 'Something went wrong here. Check the error log.'
-        return
-
-    column = ''
-
-    if event == 'all':
-        column = 'chop_enabled' # Pseudo value
-    elif event == 'arena':
-        column = 'arena_enabled'
-    elif event == 'chop':
-        column = 'chop_enabled'
-    elif event == 'fish':
-        column = 'fish_enabled'
-    elif event == 'catch':
-        column = 'catch_enabled'
-    elif event == 'summon':
-        event = 'lootbox summoning'
-        column = 'summon_enabled'
-    elif event == 'legendary-boss':
-        event = 'legendary boss'
-        column = 'boss_enabled'
-    elif event == 'miniboss':
-        column = 'miniboss_enabled'
-    elif event == 'rumble-royale':
-        column = 'rumble_enabled'
-
-    else:
-        await log_error(ctx, f'Invalid event {event} in \'set_specific_event\'')
-        if DEBUG_MODE == 'ON':
-            status = 'Something went wrong here. Check the error log.'
-        return
-
-    try:
-        cur=erg_db.cursor()
-
-        cur.execute(f'SELECT {column} FROM settings_guild WHERE guild_id=?', (ctx.guild.id,))
-        record = cur.fetchone()
-
-        if record:
-            if not event == 'all':
-                enabled_db = record[0]
-                if enabled_db != enabled:
-                    cur.execute(f'UPDATE settings_guild SET {column} = ? WHERE guild_id = ?', (enabled, ctx.guild.id,))
-                    event = event.replace('-',' ')
-                    status = f'**{ctx.author.name}**, {event} alerts are now **{action}d**.'
-                else:
-                    event = event.replace('-',' ')
-                    status = f'**{ctx.author.name}**, {event} alerts are already **{action}d**.'
-            else:
-                cur.execute(f'UPDATE settings_guild SET arena_enabled = ?, boss_enabled = ?, catch_enabled = ?, chop_enabled = ?, fish_enabled = ?, miniboss_enabled = ?, summon_enabled = ?, rumble_enabled = ? WHERE guild_id = ?', (enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, ctx.guild.id,))
-                status = f'**{ctx.author.name}**, all event alerts are now **{action}d**.'
-        else:
-            status = f'**{ctx.author.name}**, you have never used the bot on this server before. Please try again.'
-    except sqlite3.Error as error:
-        await log_error(ctx, error)
-
-    return status

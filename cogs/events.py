@@ -1,0 +1,74 @@
+# events.py
+"""Contains the on_message handling for event alerts"""
+
+import discord
+
+import database
+from resources import settings
+
+
+class EventsCog(commands.Cog):
+    """Cog with on_message event"""
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+
+    # Events
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message) -> None:
+        """Runs when a message is sent in a channel."""
+        if message.author.id in (settings.EPIC_RPG_ID,settings.RUMBLE_ROYALE_ID):
+            if message.embeds:
+                try:
+                    message_description = str(message.embeds[0].description)
+                except:
+                    message_description = ''
+                try:
+                    message_title = str(message.embeds[0].title)
+                except:
+                    message_title = ''
+                try:
+                    message_fields = str(message.embeds[0].fields)
+                except:
+                    message_fields = ''
+                try:
+                    message_footer = str(message.embeds[0].footer)
+                except:
+                    message_footer = ''
+            message_content = (
+                f'Description: {message_description}\n'
+                f'Title: {message_title}\n'
+                f'Fields: {message_fields}\n'
+                f'Footer {message_footer}'
+            )
+            event = ''
+            if 'IT\'S RAINING COINS' in message_content:
+                event = 'catch'
+            elif 'AN EPIC TREE HAS JUST GROWN' in message_content:
+                event = 'chop'
+            elif 'A MEGALODON HAS SPAWNED IN THE RIVER' in message_content:
+                event = 'fish'
+            elif 'A LOOTBOX SUMMONING HAS STARTED' in message_content:
+                event = 'lootbox'
+            elif 'A LEGENDARY BOSS JUST SPAWNED' in message_content:
+                event = 'boss'
+            elif 'Type `join` to join the arena!' in message_content:
+                event = 'arena'
+            elif 'Type `fight` to help and get a reward!' in message_content:
+                event = 'miniboss'
+            elif ('Click the emoji below to join.' in message_content
+                  or 'Click the emoji below to join!' in message_content
+                  or 'Bet battle. Fee will automatically be deducted.' in message_content):
+                event = 'rumble'
+
+            guild_settings = database.Guild
+            event_settings = database.GuildEvent
+            guild_settings = await database.get_guild(message.guild)
+            event_settings = getattr(guild_settings, event)
+            if event_settings.enabled:
+                if not event_settings.role_id == 0:
+                    role = message.guild.get_role(event_settings.role_id)
+                    await message.channel.send(f'{role.mention} {event_settings.message}')
+                else:
+                    await message.channel.send(f'@here {event_settings.message}')
+
+        await bot.process_commands(message)
