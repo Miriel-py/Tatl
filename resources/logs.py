@@ -8,7 +8,7 @@ import os
 from resources import settings
 
 
-log_file = settings.logfile
+log_file = os.path.join(settings.BOT_DIR, 'logs/discord.log')
 if not os.path.isfile(log_file):
     open(log_file, 'a').close()
 

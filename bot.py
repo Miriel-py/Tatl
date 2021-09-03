@@ -9,7 +9,6 @@ from discord.ext import commands
 import database
 from resources import settings
 
-
 intents = discord.Intents.none()
 intents.guilds = True   # for on_guild_join() and bot.guilds
 intents.messages = True   # for literally everything the bot does
@@ -19,7 +18,6 @@ bot = commands.Bot(command_prefix=database.get_prefix_all, help_command=None, ca
 
 
 EXTENSIONS = [
-    'cogs.auto_flex',
     'cogs.dev',
     'cogs.events',
     'cogs.main',

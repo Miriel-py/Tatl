@@ -28,7 +28,7 @@ class MainCog(commands.Cog):
     async def about(self, ctx: commands.Context):
         """Shows some bot info"""
         start_time = datetime.utcnow()
-        message = await ctx.reply('Testing API latency...', mention_author=False)
+        message = await ctx.send('Testing API latency...')
         end_time = datetime.utcnow()
         api_latency = end_time - start_time
         embed = await embed_about(self.bot, ctx, api_latency)
@@ -103,14 +103,14 @@ async def embed_main_help(ctx: commands.Context) -> discord.Embed:
     """Main menu embed"""
     prefix = ctx.prefix
     alert_settings = (
-        f'{emojis.bp} `{prefix}settings` : Show the current settings\n'
-        f'{emojis.bp} `{prefix}enable` / `disable` : Enable/disable alerts\n'
-        f'{emojis.bp} `{prefix}event-role` : Set an event ping role\n'
-        f'{emojis.bp} `{prefix}event-message` : Set an event message'
-        f'{emojis.bp} `{prefix}flex-channel` : Set the auto flex channel'
+        f'{emojis.BP} `{prefix}settings` : Show the current settings\n'
+        f'{emojis.BP} `{prefix}enable` / `disable` : Enable/disable alerts\n'
+        f'{emojis.BP} `{prefix}event-role` : Set an event ping role\n'
+        f'{emojis.BP} `{prefix}event-message` : Set an event message\n'
+        f'{emojis.BP} `{prefix}flex-channel` : Set the auto flex channel'
     )
     prefix_settings = (
-        f'{emojis.bp} `{prefix}prefix` : Check/set the bot prefix\n'
+        f'{emojis.BP} `{prefix}prefix` : Check/set the bot prefix\n'
     )
 
     embed = discord.Embed(
@@ -126,11 +126,6 @@ async def embed_main_help(ctx: commands.Context) -> discord.Embed:
 
 async def embed_about(bot: commands.Bot, ctx: commands.Context, api_latency: datetime) -> discord.Embed:
     """Bot info embed"""
-    user_count, *x = await database.get_user_count(ctx)
-    closed_shards = 0
-    for shard_id in bot.shards:
-        if bot.get_shard(shard_id).is_closed():
-            closed_shards += 1
     general = (
         f'{emojis.BP} {len(bot.guilds):,} servers\n'
         f'{emojis.BP} {round(bot.latency * 1000):,} ms bot latency\n'

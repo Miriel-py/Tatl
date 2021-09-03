@@ -68,7 +68,7 @@ async def log_error(error: Union[Exception, str], ctx: Optional[commands.Context
     """
     table = 'errors'
     function_name = 'log_error'
-    sql = 'INSERT INTO errors VALUES (?, ?, ?'
+    sql = 'INSERT INTO errors VALUES (?, ?, ?)'
     if ctx is not None:
         timestamp = ctx.message.created_at
         user_input = ctx.message.content
@@ -111,7 +111,7 @@ async def get_prefix_all(bot: commands.Bot, ctx: commands.Context) -> Tuple:
             prefix_db = record[0].replace('"','')
             prefixes = await mixed_case(prefix_db)
         else:
-            sql = 'INSERT INTO settings_guild VALUES (?, ?)'
+            sql = 'INSERT INTO settings_guild (guild_id, prefix) VALUES (?, ?)'
             cur.execute(sql, (guild_id, settings.DEFAULT_PREFIX,))
             prefixes = await mixed_case(settings.DEFAULT_PREFIX)
     except sqlite3.Error as error:
@@ -161,11 +161,18 @@ async def get_guild(ctx_or_guild: [commands.Context, discord.Guild]) -> Guild:
         raise
 
     if not record:
-        await log_error(
-            INTERNAL_ERROR_NO_DATA_FOUND.format(table=table, function=function_name, sql=sql),
-            ctx
-        )
-        raise exceptions.NoDataFoundError
+        sql = 'INSERT INTO settings_guild (guild_id, prefix) VALUES (?, ?)'
+        try:
+            cur.execute(sql, (guild_id, settings.DEFAULT_PREFIX))
+            sql = 'SELECT * FROM settings_guild where guild_id=?'
+            cur.execute(sql, (guild_id,))
+            record = cur.fetchone()
+        except sqlite3.Error as error:
+            await log_error(
+                INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql),
+                ctx
+            )
+            raise
     try:
         arena_settings = GuildEvent(
             name = 'Arena',

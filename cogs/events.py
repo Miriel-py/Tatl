@@ -2,6 +2,7 @@
 """Contains the on_message handling for event alerts"""
 
 import discord
+from discord.ext import commands
 
 import database
 from resources import settings
@@ -16,30 +17,30 @@ class EventsCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
-        if message.author.id in (settings.EPIC_RPG_ID,settings.RUMBLE_ROYALE_ID):
-            if message.embeds:
-                try:
-                    message_description = str(message.embeds[0].description)
-                except:
-                    message_description = ''
-                try:
-                    message_title = str(message.embeds[0].title)
-                except:
-                    message_title = ''
-                try:
-                    message_fields = str(message.embeds[0].fields)
-                except:
-                    message_fields = ''
-                try:
-                    message_footer = str(message.embeds[0].footer)
-                except:
-                    message_footer = ''
+        if message.author.id in (settings.EPIC_RPG_ID,settings.RUMBLE_ROYALE_ID) and message.embeds:
+            try:
+                message_description = str(message.embeds[0].description)
+            except:
+                message_description = ''
+            try:
+                message_title = str(message.embeds[0].title)
+            except:
+                message_title = ''
+            try:
+                message_fields = str(message.embeds[0].fields)
+            except:
+                message_fields = ''
+            try:
+                message_footer = str(message.embeds[0].footer)
+            except:
+                message_footer = ''
             message_content = (
                 f'Description: {message_description}\n'
                 f'Title: {message_title}\n'
                 f'Fields: {message_fields}\n'
                 f'Footer {message_footer}'
             )
+
             event = ''
             if 'IT\'S RAINING COINS' in message_content:
                 event = 'catch'
@@ -56,19 +57,23 @@ class EventsCog(commands.Cog):
             elif 'Type `fight` to help and get a reward!' in message_content:
                 event = 'miniboss'
             elif ('Click the emoji below to join.' in message_content
-                  or 'Click the emoji below to join!' in message_content
-                  or 'Bet battle. Fee will automatically be deducted.' in message_content):
+                or 'Click the emoji below to join!' in message_content
+                or 'Bet battle. Fee will automatically be deducted.' in message_content):
                 event = 'rumble'
 
-            guild_settings = database.Guild
-            event_settings = database.GuildEvent
-            guild_settings = await database.get_guild(message.guild)
-            event_settings = getattr(guild_settings, event)
-            if event_settings.enabled:
-                if not event_settings.role_id == 0:
-                    role = message.guild.get_role(event_settings.role_id)
-                    await message.channel.send(f'{role.mention} {event_settings.message}')
-                else:
-                    await message.channel.send(f'@here {event_settings.message}')
+            if not event == '':
+                guild_settings = database.Guild
+                event_settings = database.GuildEvent
+                guild_settings = await database.get_guild(message.guild)
+                event_settings = getattr(guild_settings, event)
+                if event_settings.enabled:
+                    if not event_settings.role_id == 0:
+                        role = message.guild.get_role(event_settings.role_id)
+                        await message.channel.send(f'{role.mention} {event_settings.message}')
+                    else:
+                        await message.channel.send(f'@here {event_settings.message}')
 
-        await bot.process_commands(message)
+
+# Initialization
+def setup(bot):
+    bot.add_cog(EventsCog(bot))

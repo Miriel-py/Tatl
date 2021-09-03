@@ -90,7 +90,7 @@ class DevCog(commands.Cog):
             return (message.author == ctx.author) and (message.channel == ctx.channel)
 
         user_name = ctx.author.name
-        await ctx.reply(f'**{user_name}**, are you **SURE**?', mention_author=False)
+        await ctx.reply(f'**{user_name}**, are you **SURE**? [`yes/no`]', mention_author=False)
         try:
             answer = await self.bot.wait_for('message', check=check, timeout=30)
             if answer.content.lower() in ('yes','y'):

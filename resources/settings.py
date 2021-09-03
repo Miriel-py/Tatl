@@ -10,7 +10,7 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 DEBUG_MODE = os.getenv('DEBUG_MODE')
 
-BOT_DIR = os.path.dirname(__file__)
+BOT_DIR = os.getcwd()
 DB_FILE = os.path.join(BOT_DIR, 'database/tatl_db.db')
 LOG_FILE = os.path.join(BOT_DIR, 'logs/discord.log')
 

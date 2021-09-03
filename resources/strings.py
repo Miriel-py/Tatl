@@ -81,14 +81,14 @@ ALERT_COLUMNS = {
     'summon': 'summon',
 }
 
-DEFAULT_MSG_ARENA = f'Type **`JOIN`** to get {emojis.event_arena} cookies!'
-DEFAULT_MSG_BOSS = f'Type **`TIME TO FIGHT`** to defeat the {emojis.event_boss} boss!'
-DEFAULT_MSG_CATCH = f'Type **`CATCH`** to get {emojis.event_catch} coins!'
-DEFAULT_MSG_CHOP = f'Type **`CHOP`** to get {emojis.event_chop} logs!'
-DEFAULT_MSG_FISH = f'Type **`FISH`** to get {emojis.event_fish} fish!'
-DEFAULT_MSG_MINIBOSS = f'Type **`FIGHT`** to defeat the {emojis.event_miniboss} miniboss!'
-DEFAULT_MSG_SUMMON = f'Type **`SUMMON`** to get a {emojis.event_summon} lootbox!'
-DEFAULT_MSG_RUMBLE = f'Click {emojis.event_rumble} to join the fight!'
+DEFAULT_MSG_ARENA = f'Type **`JOIN`** to get {emojis.EVENT_ARENA} cookies!'
+DEFAULT_MSG_BOSS = f'Type **`TIME TO FIGHT`** to defeat the {emojis.EVENT_BOSS} boss!'
+DEFAULT_MSG_CATCH = f'Type **`CATCH`** to get {emojis.EVENT_CATCH} coins!'
+DEFAULT_MSG_CHOP = f'Type **`CHOP`** to get {emojis.EVENT_CHOP} logs!'
+DEFAULT_MSG_FISH = f'Type **`FISH`** to get {emojis.EVENT_FISH} fish!'
+DEFAULT_MSG_MINIBOSS = f'Type **`FIGHT`** to defeat the {emojis.EVENT_MINIBOSS} miniboss!'
+DEFAULT_MSG_SUMMON = f'Type **`SUMMON`** to get a {emojis.EVENT_SUMMON} lootbox!'
+DEFAULT_MSG_RUMBLE = f'Click {emojis.EVENT_RUMBLE} to join the fight!'
 
 MSG_SYNTAX = 'The command syntax is `{syntax}`'
 
