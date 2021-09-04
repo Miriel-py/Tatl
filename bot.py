@@ -18,6 +18,7 @@ bot = commands.Bot(command_prefix=database.get_prefix_all, help_command=None, ca
 
 
 EXTENSIONS = [
+    'cogs.auto_flex',
     'cogs.dev',
     'cogs.events',
     'cogs.main',
