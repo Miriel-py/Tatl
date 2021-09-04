@@ -115,7 +115,7 @@ class AutoFlexCog(commands.Cog):
                 if any(message_content.lower().count(icon) == 5 for icon in icons):
                     event = 'gambling_slots'
                     logs.logger.info(message_content)
-            elif 'accumulated failed attempts:' in message_content.lower():
+            elif 'accumulated failed attempts: 0' in message_content.lower():
                 event = 'horse_tier'
                 logs.logger.info(message_content)
             elif 'the legendary boss died! everyone leveled up' in message_content.lower():
@@ -267,7 +267,8 @@ async def get_work_ultra_description(message_content: str) -> str:
 
     description = (
         f'**{user_name}** just found {log_amount} {emojis.LOG_ULTRA} ULTRA logs while "working".\n\n'
-        f'And by "working" they apparently mean "having a mental breakdown with a chainsaw in their mouth".'
+        f'And by "working" they apparently mean "having a mental breakdown".\n'
+        f'Why else would they put a chainsaw in their mouth.'
     )
 
     return description
@@ -675,10 +676,11 @@ async def get_horse_tier_description(message_content: str) -> str:
         'X': emojis.HORSE_T10
     }
 
+    first_failed_attemps_location = message_content.find("accumulated failed attempts")
     user_name_1_end = message_content.find("'s accumulated failed attempts: 0")
     user_name_1_start = message_content.rfind("'", 0, user_name_1_end) + 1
-    if user_name_1_start == 0:
-        user_name_1_start = message_content.rfind("\n", 0, user_name_1_end) + 1
+    if (user_name_1_start < first_failed_attemps_location) and (user_name_1_end > first_failed_attemps_location):
+        user_name_1_start = message_content.rfind("\\n", 0, user_name_1_end) + 2
     user_name_1 = message_content[user_name_1_start:user_name_1_end]
     user_tier_search = f'{user_name_1}** got a tier '
     user_tier_start = message_content.find(user_tier_search) + len(user_tier_search)
@@ -687,9 +689,10 @@ async def get_horse_tier_description(message_content: str) -> str:
 
     user_name_2 = None
     if message_content.count('failed attempts: 0') == 2:
-        user_name_2_end = message_content.find("'s accumulated failed attempts: 0", user_name_1_end)
-        user_name_2_start = message_content.rfind("\n", 0, user_name_2_end) + 1
-    user_name_2 = message_content[user_name_2_start:user_name_2_end]
+        user_name_2_search = "'s accumulated failed attempts: 0"
+        user_name_2_end = message_content.find(user_name_2_search, user_name_1_end + len(user_name_2_search))
+        user_name_2_start = message_content.rfind("\\n", 0, user_name_2_end) + 2
+        user_name_2 = message_content[user_name_2_start:user_name_2_end]
 
     if user_name_2 is None:
         description = (
