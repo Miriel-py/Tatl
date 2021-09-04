@@ -296,7 +296,7 @@ async def update_guild(ctx: commands.Context, **kwargs) -> None:
     guild_id = ctx.guild.id
     if not kwargs:
         await log_error(
-            INTERNAL_ERROR_NO_ARGUMENTS.format(error=error, table=table, function=function_name),
+            INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name),
             ctx
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
