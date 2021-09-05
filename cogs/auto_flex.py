@@ -114,11 +114,37 @@ class AutoFlexCog(commands.Cog):
                     event = 'enchant_transcend'
                     logs.logger.info(message_content)
             elif "wait what? it landed on its side" in message_content.lower():
+                winnings_start_string = 'YOU WON '
+                winnings_start = message_content.find(winnings_start_string) + len(winnings_start_string)
+                winnings_end = message_content.find(' COINS', winnings_start)
+                winnings = message_content[winnings_start:winnings_end]
+                try:
+                    winnings = int(winnings.replace(',','').strip())
+                except Exception as error:
+                    await database.log_error(
+                        f'Error: {error}\nFunction: on_message (slots)\nwinnings: {winnings}'
+                    )
+                    return
+                if winnings < 100_000_000:
+                    return
                 event = 'gambling_coinflip'
                 logs.logger.info(message_content)
             elif "'s slots" in message_content.lower():
                 icons = ['💎','💯','🎁','✨','🍀']
                 if any(message_content.lower().count(icon) == 5 for icon in icons):
+                    winnings_start_string = 'You won **'
+                    winnings_start = message_content.find(winnings_start_string) + len(winnings_start_string)
+                    winnings_end = message_content.find('** coins', winnings_start)
+                    winnings = message_content[winnings_start:winnings_end]
+                    try:
+                        winnings = int(winnings.replace(',','').strip())
+                    except Exception as error:
+                        await database.log_error(
+                            f'Error: {error}\nFunction: on_message (slots)\nwinnings: {winnings}'
+                        )
+                        return
+                    if winnings < 100_000_000:
+                        return
                     event = 'gambling_slots'
                     logs.logger.info(message_content)
             elif ("'s wheel" in message_content.lower()) and ('you won' in message_content.lower()):
@@ -133,6 +159,19 @@ class AutoFlexCog(commands.Cog):
                     ':black_large_square:U0001f7ea:black_large_square::black_large_square:'
                 ).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 if board_check in message_content_check:
+                    winnings_start_string = 'You won **'
+                    winnings_start = message_content.find(winnings_start_string) + len(winnings_start_string)
+                    winnings_end = message_content.find('** coins', winnings_start)
+                    winnings = message_content[winnings_start:winnings_end]
+                    try:
+                        winnings = int(winnings.replace(',','').strip())
+                    except Exception as error:
+                        await database.log_error(
+                            f'Error: {error}\nFunction: on_message (slots)\nwinnings: {winnings}'
+                        )
+                        return
+                    if winnings < 100_000_000:
+                        return
                     event = 'gambling_wheel'
                     logs.logger.info(message_content)
             elif 'accumulated failed attempts: 0' in message_content.lower():
