@@ -49,7 +49,7 @@ class EventsCog(commands.Cog):
             elif 'A MEGALODON HAS SPAWNED IN THE RIVER' in message_content:
                 event = 'fish'
             elif 'A LOOTBOX SUMMONING HAS STARTED' in message_content:
-                event = 'lootbox'
+                event = 'summon'
             elif 'A LEGENDARY BOSS JUST SPAWNED' in message_content:
                 event = 'boss'
             elif 'Type `join` to join the arena!' in message_content:

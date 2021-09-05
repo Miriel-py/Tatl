@@ -20,6 +20,8 @@ EVENT_RUMBLE = '<:rr_swords:873576462819680306>'
 # Gambling
 SLOTS_100 = ':100:'
 SLOTS_CLOVER = ':four_leaf_clover:'
+SLOTS = ':slot_machine:'
+
 
 # Horses
 HORSE_T1 = '<:erg_horset1:770327272359723119>'
@@ -43,8 +45,10 @@ LB_RARE = '<:erg_rarelootbox:770547275709415424>'
 LB_UNCOMMON = '<:erg_uncommonlootbox:770547275528667137>'
 
 # Materials
+LOG_HYPER = '<:erg_hyperlog:770324898093596722>'
 LOG_ULTRA = '<:erg_ultralog:770324898345648179>'
 SEED = '<:erg_seed:824527296173047859>'
+ZOMBIE_EYE = '<:erg_zombieeye:770324898194915328>'
 
 # Pet skills
 SKILL_ASCENDED = '<:erg_skillascended:770327200711835678>'
@@ -61,6 +65,8 @@ ENCHANTMENT = ':sparkles:'
 EPIC_GUARD = ':oncoming_police_car:'
 ERROR = '<:redcross:796796637695311963>'
 LIFE_POTION = '<:erg_lifepotion:770327166956601425>'
+SLAP = '<:slap2:836687783799947306>'
 SUS = '<:sus:818793691711275019>'
 TATL = '<:tatl:839791822317420544>'
 TIME_TRAVEL = ':cyclone:'
+WHEEE = '<a:wheeee:884096696911536148>'

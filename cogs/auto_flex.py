@@ -2,6 +2,7 @@
 """Contains the on_message handling for auto flex alerts"""
 
 from logging import log
+from os import replace
 import discord
 from discord import emoji
 from discord.ext import commands
@@ -54,6 +55,9 @@ class AutoFlexCog(commands.Cog):
             event = ''
             if 'is this a **dream**????' in message_content.lower():
                 event = 'work_ultra'
+                logs.logger.info(message_content)
+            elif 'wwwwwoooooooooaaaaaaaa!!!!1' in message_content.lower():
+                event = 'work_hyper'
                 logs.logger.info(message_content)
             elif 'pet adventure rewards' in message_content.lower() and 'ultra log' in message_content.lower():
                 event = 'pet_ultra'
@@ -117,6 +121,20 @@ class AutoFlexCog(commands.Cog):
                 if any(message_content.lower().count(icon) == 5 for icon in icons):
                     event = 'gambling_slots'
                     logs.logger.info(message_content)
+            elif ("'s wheel" in message_content.lower()) and ('you won' in message_content.lower()):
+                message_content_check = (message_content
+                                         .encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                                         .replace('U0001f7e6','').replace('U0001f7eb','').replace('U0001f7e7','')
+                                         .replace('U0001f7e5','').replace('U0001f7e8','').replace('U0001f7e9',''))
+                logs.logger.info(f'MESSAGE CONTENT CHECK\n{message_content_check}')
+                board_check = (
+                    ':black_large_square::black_large_square::black_large_square::small_red_triangle_down:'
+                    ':black_large_square::black_large_square::black_large_square:n:black_large_square:'
+                    ':black_large_square:U0001f7ea:black_large_square::black_large_square:'
+                ).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                if board_check in message_content_check:
+                    event = 'gambling_wheel'
+                    logs.logger.info(message_content)
             elif 'accumulated failed attempts: 0' in message_content.lower():
                 event = 'horse_tier'
                 logs.logger.info(message_content)
@@ -138,6 +156,9 @@ class AutoFlexCog(commands.Cog):
                 logs.logger.info(message_content)
             elif 'killed the **epic guard**' in message_content.lower():
                 event = 'event_jail'
+                logs.logger.info(message_content)
+            elif ('fights the horde...' in message_content.lower()) and ('success!!' in message_content.lower()):
+                event = 'event_hunt'
                 logs.logger.info(message_content)
 
             if not event == '':
@@ -162,6 +183,7 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
 
     flex_titles = {
         'work_ultra': f'{emojis.LOG_ULTRA} It\'s not a dream!',
+        'work_hyper': f'{emojis.LOG_HYPER} Hyperino',
         'pet_ultra': f'{emojis.LOG_ULTRA} ULTRA l...azy',
         'pet_ascend': f'{emojis.SKILL_ASCENDED} No skill champ',
         'forge_godly': f'{emojis.SWORD_GODLY} Almost a cookie',
@@ -177,7 +199,8 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'enchant_transmute': f'{emojis.ENCHANTMENT} Transmutant',
         'enchant_transcend': f'{emojis.ENCHANTMENT} Lost in Transcendation',
         'gambling_coinflip': f'{emojis.COIN} Stop gambling, kids!',
-        'gambling_slots': f'{emojis.SLOTS_CLOVER} JACKPOT',
+        'gambling_slots': f'{emojis.SLOTS} JACKPOT',
+        'gambling_wheel': f'{emojis.WHEEE} WHEEEEEEEEEEEEEEE.....',
         'horse_tier': f'{emojis.HORSE_T1} Horseback Mountain',
         'event_boss': f'{emojis.EVENT_BOSS} LEGEN... WAIT FOR IT... (seriously, wait for it, gonna be a while)',
         'event_lb': f'{emojis.LB_OMEGA} They did what now?',
@@ -185,10 +208,12 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'event_farm': f'{emojis.CROSSED_SWORDS} Totally believable level up story',
         'event_heal': f'{emojis.LIFE_POTION} Very mysterious',
         'event_jail': f'{emojis.EPIC_GUARD} But... why?',
+        'event_hunt': f'{emojis.ZOMBIE_EYE} Not quite a level'
     }
 
     flex_description_functions = {
         'work_ultra': get_work_ultra_description,
+        'work_hyper': get_work_hyper_description,
         'pet_ultra': get_pet_ultra_description,
         'pet_ascend': get_pet_ascend_description,
         'forge_godly': get_forge_godly_description,
@@ -205,6 +230,7 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'enchant_transcend': get_enchant_transcend_description,
         'gambling_coinflip': get_gambling_coinflip_description,
         'gambling_slots': get_gambling_slots_description,
+        'gambling_wheel': get_gambling_wheel_description,
         'horse_tier': get_horse_tier_description,
         'event_boss': get_event_boss_description,
         'event_lb': get_event_lb_description,
@@ -212,10 +238,12 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'event_farm': get_event_farm_description,
         'event_heal': get_event_heal_description,
         'event_jail': get_event_jail_description,
+        'event_hunt': get_event_hunt_description
     }
 
     flex_thumbnails = {
         'work_ultra': 'https://c.tenor.com/4ReodhBihBQAAAAC/ruthe-biber.gif',
+        'work_hyper': 'https://c.tenor.com/vfraS_QhPcEAAAAd/captain-america-pecs.gif',
         'pet_ultra': 'https://c.tenor.com/2HYVY5cyMAAAAAAC/pls-send-help-help-me.gif',
         'pet_ascend': 'https://c.tenor.com/yyiGOtquk74AAAAC/rocket-clicks-rocket.gif',
         'forge_godly': 'https://c.tenor.com/OSYJN4DF0tEAAAAC/light-up.gif',
@@ -232,6 +260,7 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'enchant_transcend': 'https://c.tenor.com/9-b0gUv-HokAAAAC/enchanted-sword-enchanted-iron-sword.gif',
         'gambling_coinflip': 'https://c.tenor.com/GtTxw8NRrlwAAAAC/dbh-connor.gif',
         'gambling_slots': 'https://c.tenor.com/vh6UO80RFmYAAAAC/toilet-paper-slot-machine.gif',
+        'gambling_wheel': 'https://c.tenor.com/JNZvCXyhKogAAAAd/wheel-spinning.gif',
         'horse_tier': 'https://c.tenor.com/FMdPKbgHXbsAAAAC/horse-laugh.gif',
         'event_boss': 'https://c.tenor.com/ARAF0r6nJQAAAAAC/dragon-rawr.gif',
         'event_lb': 'https://c.tenor.com/6WfJrQYFXlYAAAAC/magic-kazaam.gif',
@@ -239,10 +268,21 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'event_farm': 'https://c.tenor.com/OEIwT0KEyREAAAAC/homer-fist.gif',
         'event_heal': 'https://c.tenor.com/IfAs08au8IYAAAAd/he-died-in-mysterious-circumstances-the-history-guy.gif',
         'event_jail': 'https://c.tenor.com/txj6Fp2ipqMAAAAC/prison-jail.gif',
+        'event_hunt': 'https://c.tenor.com/1YbbHo0BmEIAAAAC/pvz-plants-vs-zombies.gif'
     }
 
     embed_title = flex_titles[event]
     embed_description = await flex_description_functions[event](message_content)
+
+    if not '**Miriel** and' in message_content and 'FlyingPanda' in message_content:
+        embed_description = (
+            f'{embed_description}\n\n**All hail Panda!** :panda_face:'
+        )
+    if (not 'and **nad**' in message_content.lower()
+        and ("nad's" in message_content.lower() or '**nad**' in message_content.lower())):
+        embed_description = (
+            f'{embed_description}\n\n{emojis.SLAP}'
+        )
 
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
@@ -272,6 +312,25 @@ async def get_work_ultra_description(message_content: str) -> str:
         f'**{user_name}** just found {log_amount} {emojis.LOG_ULTRA} ULTRA logs while "working".\n\n'
         f'And by "working" they apparently mean "having a mental breakdown".\n'
         f'Why else would they put a chainsaw in their mouth.'
+    )
+
+    return description
+
+
+async def get_work_hyper_description(message_content: str) -> str:
+    """Returns the embed description for the work_hyper event"""
+    user_name_end = message_content.find('** is chopping')
+    user_name_start = message_content.rfind('**', 0, user_name_end) + 2
+    user_name = message_content[user_name_start:user_name_end]
+
+    log_amount_string = '** got '
+    log_amount_start = message_content.find(log_amount_string) + len(log_amount_string)
+    log_amount_end = message_content.find(' <', log_amount_start)
+    log_amount = message_content[log_amount_start:log_amount_end].strip()
+
+    description = (
+        f'**{user_name}** used a tree as a punching bag and ended up with {log_amount} {emojis.LOG_HYPER} HYPER logs.\n\n'
+        f'Better stay at a distance, kids, this doesn\'t look safe.'
     )
 
     return description
@@ -390,16 +449,15 @@ async def get_lb_omega_description(message_content: str) -> str:
 
     lb_amount_end = message_content.find(' <:OMEGA')
     lb_amount_start_search = f'**{user_name}** got '
-    lb_amount_start_user = message_content.find(lb_amount_start_search)
-    partner_loot = False
-    if hunt_together:
-        lb_amount_start_search_partner = f'**{partner_name}** got '
-        lb_amount_start_partner = message_content.find(lb_amount_start_search_partner)
-        if lb_amount_start_partner > lb_amount_start_user:
-            lb_amount_start_search = lb_amount_start_search_partner
-            partner_loot = True
-
     lb_amount_start = message_content.rfind(lb_amount_start_search, 0, lb_amount_end) + len(lb_amount_start_search)
+    partner_loot = False
+    if hunt_together and lb_amount_end - lb_amount_start > 3:
+        lb_amount_start_search_partner = f'**{partner_name}** got '
+        lb_amount_start = (message_content
+                           .rfind(lb_amount_start_search_partner, 0, lb_amount_end)
+                           + len(lb_amount_start_search_partner))
+        partner_loot = True
+
     lb_amount = message_content[lb_amount_start:lb_amount_end]
     try:
         lb_amount = int(lb_amount.strip())
@@ -436,16 +494,15 @@ async def get_lb_godly_description(message_content: str) -> str:
 
     lb_amount_end = message_content.find(' <:GODLY')
     lb_amount_start_search = f'**{user_name}** got '
-    lb_amount_start_user = message_content.find(lb_amount_start_search)
-    partner_loot = False
-    if hunt_together:
-        lb_amount_start_search_partner = f'**{partner_name}** got '
-        lb_amount_start_partner = message_content.find(lb_amount_start_search_partner)
-        if lb_amount_start_partner > lb_amount_start_user:
-            lb_amount_start_search = lb_amount_start_search_partner
-            partner_loot = True
-
     lb_amount_start = message_content.rfind(lb_amount_start_search, 0, lb_amount_end) + len(lb_amount_start_search)
+    partner_loot = False
+    if hunt_together and lb_amount_end - lb_amount_start > 3:
+        lb_amount_start_search_partner = f'**{partner_name}** got '
+        lb_amount_start = (message_content
+                           .rfind(lb_amount_start_search_partner, 0, lb_amount_end)
+                           + len(lb_amount_start_search_partner))
+        partner_loot = True
+
     lb_amount = message_content[lb_amount_start:lb_amount_end]
     try:
         lb_amount = int(lb_amount.strip())
@@ -695,6 +752,39 @@ async def get_gambling_slots_description(message_content: str) -> str:
     return description
 
 
+async def get_gambling_wheel_description(message_content: str) -> str:
+    """Returns the embed description for the gambling_wheel event"""
+    user_name_end = message_content.find("'s wheel")
+    user_name_start = message_content.rfind('"', 0, user_name_end) + 1
+    user_name = message_content[user_name_start:user_name_end]
+
+    winnings_start_string = 'You won **'
+    winnings_start = message_content.find(winnings_start_string) + len(winnings_start_string)
+    winnings_end = message_content.find('** coins', winnings_start)
+    winnings = message_content[winnings_start:winnings_end]
+    try:
+        winnings = int(winnings.replace(',','').strip())
+    except Exception as error:
+        await database.log_error(
+            f'Error: {error}\nFunction: get_gambling_wheel_description\nwinnings: {winnings}'
+        )
+        return
+
+    description = (
+        f'**{user_name}** spun the wheel and... won the main prize! **{winnings:,}** coins to be exact!\n\n'
+        f'Pretty sure they\'re going to lose it all tho since wheel is the worst gambling command of all.\n'
+        f'(Don\'t tell them, where\'s the fun in that.)'
+    )
+
+    if winnings < 1_000_000:
+        description = (
+            f'{description}\n\n'
+            f'Next time try to bet something higher btw, all that luck for those few coins, lol.'
+        )
+
+    return description
+
+
 async def get_horse_tier_description(message_content: str) -> str:
     """Returns the embed description for the gambling_slots event"""
 
@@ -856,6 +946,34 @@ async def get_event_jail_description(message_content: str) -> str:
         f'**{user_name}** killed the EPIC guard!\n\n'
         f'Now there is another EPIC guard.\n\n'
         f'Uh. So. Yay?'
+    )
+
+    return description
+
+
+async def get_event_hunt_description(message_content: str) -> str:
+    """Returns the embed description for the event_hunt event"""
+    user_name_end = message_content.find("** fights the horde")
+    user_name_start = message_content.rfind(' **', 0, user_name_end) + 3
+    user_name = message_content[user_name_start:user_name_end]
+
+    zombie_amount_end = message_content.find(" zombies")
+    zombie_amount_search = 'just '
+    zombie_amount_start = message_content.rfind(zombie_amount_search, 0, zombie_amount_end) + len(zombie_amount_search)
+    zombie_amount = message_content[zombie_amount_start:zombie_amount_end]
+
+    try:
+        zombie_amount = int(zombie_amount.strip())
+    except Exception as error:
+        await database.log_error(
+            f'Error: {error}\nFunction: get_event_hunt_description\zombie_amount: {zombie_amount}'
+        )
+        return
+
+    description = (
+        f'**{user_name}** killed a whole horde of zombies!\n\n'
+        f'Well, actually, it was just {zombie_amount} zombies, lol.\n'
+        f'Does that even qualify as a flex {emojis.SUS}'
     )
 
     return description
