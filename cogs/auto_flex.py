@@ -88,6 +88,8 @@ class AutoFlexCog(commands.Cog):
                 event = 'pr_timetravel'
                 logs.logger.info(message_content)
             elif "'s enchant" in message_content.lower():
+                if "equipment's enchant will be kept" in message_content.lower():
+                    return
                 enchants = ['edgy','ultra-edgy','omega','ultra-omega','godly']
                 if any(enchant in message_content.lower() for enchant in enchants):
                     event = 'enchant_enchant'
@@ -146,6 +148,7 @@ class AutoFlexCog(commands.Cog):
                     auto_flex_channel = self.bot.get_channel(guild_settings.auto_flex_channel_id)
                     embed = await embed_auto_flex(message, message_content, event)
                     await auto_flex_channel.send(embed=embed)
+                    await message.add_reaction(emojis.TATL)
 
 
 # Initialization
@@ -352,18 +355,18 @@ async def get_lb_100_description(message_content: str) -> str:
     user_name_start = message_content.rfind('"', 0, user_name_end) + 1
     user_name = message_content[user_name_start:user_name_end]
 
-    lootbox_type_end = message_content.find(' lootbox opened!')
-    lootbox_type_start = message_content.rfind(' ', 0, lootbox_type_end) + 1
-    lootbox_type = message_content[lootbox_type_start:lootbox_type_end]
+    lb_type_end = message_content.find(' lootbox opened!')
+    lb_type_start = message_content.rfind(' ', 0, lb_type_end) + 1
+    lb_type = message_content[lb_type_start:lb_type_end]
 
     try:
-        lootbox_emoji = lootbox_type_emoji[lootbox_type.lower()]
+        lb_emoji = lootbox_type_emoji[lb_type.lower()]
     except Exception as error:
-        await database.log_error(f'Error: {error}\nFunction: get_lb_100_description\nlootbox_type: {lootbox_type}')
+        await database.log_error(f'Error: {error}\nFunction: get_lb_100_description\nlootbox_type: {lb_type}')
         return
 
     description = (
-        f'**{user_name}** managed to ~~hoard~~ open 100 {lootbox_emoji} {lootbox_type} lootboxes at once.\n\n'
+        f'**{user_name}** managed to ~~hoard~~ open 100 {lb_emoji} {lb_type} lootboxes at once.\n\n'
         f'What a ~~hoarder~~ dedicated fellow!'
     )
 
@@ -375,27 +378,43 @@ async def get_lb_omega_description(message_content: str) -> str:
     hunt_together = True if 'are hunting together' in message_content else False
 
     if hunt_together:
-        user_name_end = message_content.find("** and **")
+        user_name_search = "** and **"
+        user_name_end = message_content.find(user_name_search)
+        partner_name_start = user_name_end + len(user_name_search)
+        partner_name_end = message_content.find("** are", partner_name_start)
+        partner_name = message_content[partner_name_start:partner_name_end]
     else:
         user_name_end = message_content.find("** found and killed")
     user_name_start = message_content.rfind('**', 0, user_name_end) + 2
     user_name = message_content[user_name_start:user_name_end]
 
-    lootbox_amount_end = message_content.find(' <:OMEGA')
-    lootbox_amount_start_search = 'got '
-    lootbox_amount_start = message_content.rfind(lootbox_amount_start_search, 0, lootbox_amount_end) + len(lootbox_amount_start_search)
-    lootbox_amount = message_content[lootbox_amount_start:lootbox_amount_end]
+    lb_amount_end = message_content.find(' <:OMEGA')
+    lb_amount_start_search = f'**{user_name}** got '
+    lb_amount_start_user = message_content.find(lb_amount_start_search)
+    partner_loot = False
+    if hunt_together:
+        lb_amount_start_search_partner = f'**{partner_name}** got '
+        lb_amount_start_partner = message_content.find(lb_amount_start_search_partner)
+        if lb_amount_start_partner > lb_amount_start_user:
+            lb_amount_start_search = lb_amount_start_search_partner
+            partner_loot = True
+
+    lb_amount_start = message_content.rfind(lb_amount_start_search, 0, lb_amount_end) + len(lb_amount_start_search)
+    lb_amount = message_content[lb_amount_start:lb_amount_end]
     try:
-        lootbox_amount = int(lootbox_amount.strip())
+        lb_amount = int(lb_amount.strip())
     except Exception as error:
-        await database.log_error(f'Error: {error}\nFunction: get_lb_omega_description\nlootbox_amount: {lootbox_amount}')
+        await database.log_error(f'Error: {error}\nFunction: get_lb_omega_description\nlootbox_amount: {lb_amount}')
         return
 
     description = (
-        f'**{user_name}** just found {lootbox_amount} {emojis.LB_OMEGA} OMEGA lootbox!\n\n'
+        f'**{user_name}** just found {lb_amount} {emojis.LB_OMEGA} OMEGA lootbox!\n\n'
         f'If you\'re not Ray: CONGRATULATIONS!\n'
         f'If you\'re Ray: Stop spamming this channel {emojis.CAT_GUN}'
     )
+
+    if partner_loot:
+        description = f'{description}\n\n(Don\'t tell them, but the lootbox was actually for their partner lmao)'
 
     return description
 
@@ -405,26 +424,42 @@ async def get_lb_godly_description(message_content: str) -> str:
     hunt_together = True if 'are hunting together' in message_content else False
 
     if hunt_together:
-        user_name_end = message_content.find("** and **")
+        user_name_search = "** and **"
+        user_name_end = message_content.find(user_name_search)
+        partner_name_start = user_name_end + len(user_name_search)
+        partner_name_end = message_content.find("** are", partner_name_start)
+        partner_name = message_content[partner_name_start:partner_name_end]
     else:
         user_name_end = message_content.find("** found and killed")
     user_name_start = message_content.rfind('**', 0, user_name_end) + 2
     user_name = message_content[user_name_start:user_name_end]
 
-    lootbox_amount_end = message_content.find(' <:GODLY')
-    lootbox_amount_string = 'got '
-    lootbox_amount_start = message_content.rfind(lootbox_amount_string, 0, lootbox_amount_end) + len(lootbox_amount_string)
-    lootbox_amount = message_content[lootbox_amount_start:lootbox_amount_end]
+    lb_amount_end = message_content.find(' <:GODLY')
+    lb_amount_start_search = f'**{user_name}** got '
+    lb_amount_start_user = message_content.find(lb_amount_start_search)
+    partner_loot = False
+    if hunt_together:
+        lb_amount_start_search_partner = f'**{partner_name}** got '
+        lb_amount_start_partner = message_content.find(lb_amount_start_search_partner)
+        if lb_amount_start_partner > lb_amount_start_user:
+            lb_amount_start_search = lb_amount_start_search_partner
+            partner_loot = True
+
+    lb_amount_start = message_content.rfind(lb_amount_start_search, 0, lb_amount_end) + len(lb_amount_start_search)
+    lb_amount = message_content[lb_amount_start:lb_amount_end]
     try:
-        lootbox_amount = int(lootbox_amount.strip())
+        lb_amount = int(lb_amount.strip())
     except Exception as error:
-        await database.log_error(f'Error: {error}\nFunction: get_lb_godly_description\nlootbox_amount: {lootbox_amount}')
+        await database.log_error(f'Error: {error}\nFunction: get_lb_godly_description\nlootbox_amount: {lb_amount}')
         return
 
     description = (
-        f'**{user_name}** just found {lootbox_amount} {emojis.LB_GODLY} GODLY lootbox??!\n\n'
+        f'**{user_name}** just found {lb_amount} {emojis.LB_GODLY} GODLY lootbox??!\n\n'
         f'I\'m pretty sure this is illegal und should be reported.'
     )
+
+    if partner_loot:
+        description = f'{description}\n\n(Hope they didn\'t party too hard, the lootbox got stolen by their partner lol)'
 
     return description
 
@@ -435,20 +470,20 @@ async def get_lb_edgy_ultra_description(message_content: str) -> str:
     user_name_start = message_content.rfind('"', 0, user_name_end) + 1
     user_name = message_content[user_name_start:user_name_end]
 
-    log_amount_end = message_content.find(' <:ULTRA')
-    log_amount_start = message_content.rfind('+', 0, log_amount_end) + 1
-    log_amount = message_content[log_amount_start:log_amount_end]
+    lb_amount_end = message_content.find(' <:ULTRA')
+    lb_amount_start = message_content.rfind('+', 0, lb_amount_end) + 1
+    lb_amount = message_content[lb_amount_start:lb_amount_end]
     try:
-        lootbox_amount = int(log_amount.strip())
+        lb_amount = int(lb_amount.strip())
     except Exception as error:
         await database.log_error(
-            f'Error: {error}\nFunction: get_lb_edgy_ultra_description\nlog_amount: {log_amount}'
+            f'Error: {error}\nFunction: get_lb_edgy_ultra_description\nlog_amount: {lb_amount}'
         )
         return
 
     description = (
         f'Look at **{user_name}**, opening that {emojis.LB_EDGY} EDGY lootbox like it\'s worth something, haha.\n\n'
-        f'See. All he got is {log_amount} lousy {emojis.LOG_ULTRA} ULTRA log.\n\n'
+        f'See. All he got is {lb_amount} lousy {emojis.LOG_ULTRA} ULTRA log.\n\n'
         f'...\n\n'
         f'**How.**'
     )
@@ -462,20 +497,20 @@ async def get_lb_omega_ultra_description(message_content: str) -> str:
     user_name_start = message_content.rfind('"', 0, user_name_end) + 1
     user_name = message_content[user_name_start:user_name_end]
 
-    log_amount_end = message_content.find(' <:ULTRA')
-    log_amount_start = message_content.rfind('+', 0, log_amount_end) + 1
-    log_amount = message_content[log_amount_start:log_amount_end]
+    lb_amount_end = message_content.find(' <:ULTRA')
+    lb_amount_start = message_content.rfind('+', 0, lb_amount_end) + 1
+    lb_amount = message_content[lb_amount_start:lb_amount_end]
     try:
-        lootbox_amount = int(log_amount.strip())
+        lb_amount = int(lb_amount.strip())
     except Exception as error:
         await database.log_error(
-            f'Error: {error}\nFunction: get_lb_omega_ultra_description\nlog_amount: {log_amount}'
+            f'Error: {error}\nFunction: get_lb_omega_ultra_description\nlog_amount: {lb_amount}'
         )
         return
 
     description = (
         f'**{user_name}** opened an {emojis.LB_OMEGA} OMEGA lootbox!\n\n'
-        f'And found {log_amount} {emojis.LOG_ULTRA} ULTRA log in there on top!\n\n'
+        f'And found {lb_amount} {emojis.LOG_ULTRA} ULTRA log in there on top!\n\n'
         f'Tbh they probably stole that box from the server owner.\n'
         f'Something should arrest them, this is criminal.'
     )
@@ -682,10 +717,14 @@ async def get_horse_tier_description(message_content: str) -> str:
     if (user_name_1_start < first_failed_attemps_location) and (user_name_1_end > first_failed_attemps_location):
         user_name_1_start = message_content.rfind("\\n", 0, user_name_1_end) + 2
     user_name_1 = message_content[user_name_1_start:user_name_1_end]
-    user_tier_search = f'{user_name_1}** got a tier '
+    user_tier_search = f'{user_name_1} got a tier '
     user_tier_start = message_content.find(user_tier_search) + len(user_tier_search)
     user_tier_end = message_content.find(' <:tier', user_tier_start)
     user_tier = message_content[user_tier_start:user_tier_end]
+    user_horse_name_search = "it's called "
+    user_horse_name_start = message_content.find(user_horse_name_search, user_tier_end) + len(user_horse_name_search)
+    user_horse_name_end = message_content.find(' !', user_horse_name_start)
+    user_horse_name = message_content[user_horse_name_start:user_horse_name_end]
 
     user_name_2 = None
     if message_content.count('failed attempts: 0') == 2:
@@ -698,7 +737,8 @@ async def get_horse_tier_description(message_content: str) -> str:
         description = (
             f'**{user_name_1}**\'s horse just tiered up while having completely inappropriate fun with another '
             f'horse! Neigh!\n\n'
-            f'Congratulations, it\'s a little tier {user_tier} {horse_tier_emojis[user_tier]}!'
+            f'Congratulations, it\'s a little tier {user_tier} {horse_tier_emojis[user_tier]}!\n\n'
+            f'(Who names their horse **{user_horse_name}** tho, seriously.)'
         )
     else:
         description = (
