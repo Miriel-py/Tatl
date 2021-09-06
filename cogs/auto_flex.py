@@ -122,7 +122,7 @@ class AutoFlexCog(commands.Cog):
                     winnings = int(winnings.replace(',','').strip())
                 except Exception as error:
                     await database.log_error(
-                        f'Error: {error}\nFunction: on_message (slots)\nwinnings: {winnings}'
+                        f'Error: {error}\nFunction: on_message (coinflip)\nwinnings: {winnings}'
                     )
                     return
                 if winnings < 100_000_000:
@@ -167,7 +167,7 @@ class AutoFlexCog(commands.Cog):
                         winnings = int(winnings.replace(',','').strip())
                     except Exception as error:
                         await database.log_error(
-                            f'Error: {error}\nFunction: on_message (slots)\nwinnings: {winnings}'
+                            f'Error: {error}\nFunction: on_message (wheel)\nwinnings: {winnings}'
                         )
                         return
                     if winnings < 100_000_000:
@@ -282,24 +282,24 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
 
     flex_thumbnails = {
         'work_ultra': 'https://c.tenor.com/4ReodhBihBQAAAAC/ruthe-biber.gif',
-        'work_hyper': 'https://c.tenor.com/vfraS_QhPcEAAAAd/captain-america-pecs.gif',
-        'pet_ultra': 'https://c.tenor.com/2HYVY5cyMAAAAAAC/pls-send-help-help-me.gif',
+        'work_hyper': 'https://tenor.com/view/ruthe-biber-axt-motorrad-motorcycle-gif-15486807',
+        'pet_ultra': 'https://c.tenor.com/dHfN5MyGvyQAAAAC/cheerful-dog-billy-dog-billy.gif',
         'pet_ascend': 'https://c.tenor.com/yyiGOtquk74AAAAC/rocket-clicks-rocket.gif',
         'forge_godly': 'https://c.tenor.com/OSYJN4DF0tEAAAAC/light-up.gif',
         'lb_100': 'https://c.tenor.com/KEky01zvXLMAAAAC/we-bare-bears-grizzly.gif',
-        'lb_omega': 'https://c.tenor.com/0ZYUSU6NtMkAAAAC/box-cartoon-box.gif',
+        'lb_omega': 'https://c.tenor.com/7guOJxVGPoEAAAAC/ruthe-ralph.gif',
         'lb_godly': 'https://c.tenor.com/U3I7KkH0w50AAAAC/unbeliavable-inconceivable.gif',
         'lb_edgy_ultra': 'https://c.tenor.com/clnoM8TeSxcAAAAC/wait-what-unbelievable.gif',
         'lb_omega_ultra': 'https://c.tenor.com/Dm7vWLpdTpcAAAAC/seinfeld.gif',
         'pr_ascension': 'https://c.tenor.com/Jpx1xCUOyz8AAAAC/ascend.gif',
-        'pr_timetravel': 'https://c.tenor.com/bI5cZAs6klMAAAAC/11th-doctor-doctor-who.gif',
+        'pr_timetravel': 'https://c.tenor.com/nZ9IFupOViUAAAAC/keanu-reeves.gif',
         'enchant_enchant': 'https://c.tenor.com/0LZHWJz6lLIAAAAC/sword-in-the-stone-excalibur.gif',
         'enchant_refine': 'https://c.tenor.com/-08JLwayFF8AAAAC/sword-inuyasha.gif',
         'enchant_transmute': 'https://c.tenor.com/AvGZ4QEw6xUAAAAC/sword.gif',
-        'enchant_transcend': 'https://c.tenor.com/9-b0gUv-HokAAAAC/enchanted-sword-enchanted-iron-sword.gif',
+        'enchant_transcend': 'https://c.tenor.com/DUtaFIJVNiUAAAAd/skyward-sword-zelda.gif',
         'gambling_coinflip': 'https://c.tenor.com/GtTxw8NRrlwAAAAC/dbh-connor.gif',
         'gambling_slots': 'https://c.tenor.com/vh6UO80RFmYAAAAC/toilet-paper-slot-machine.gif',
-        'gambling_wheel': 'https://c.tenor.com/JNZvCXyhKogAAAAd/wheel-spinning.gif',
+        'gambling_wheel': 'https://c.tenor.com/lmetHrqB8k4AAAAC/flossen-bubbles.gif',
         'horse_tier': 'https://c.tenor.com/FMdPKbgHXbsAAAAC/horse-laugh.gif',
         'event_boss': 'https://c.tenor.com/ARAF0r6nJQAAAAAC/dragon-rawr.gif',
         'event_lb': 'https://c.tenor.com/6WfJrQYFXlYAAAAC/magic-kazaam.gif',
@@ -622,9 +622,8 @@ async def get_pr_ascension_description(message_content: str) -> str:
 
     description = (
         f'**{user_name}** just ascended.\n\n'
-        f'Yep. Just like that.\n\n'
-        f'Congratulations!\n\n'
-        f'Really hope you like dynamite tho, because you gotta see a lot of that.'
+        f'Yep. Just like that. Congratulations!\n\n'
+        f'Really hope you like dynamite tho, because you\'re gonna see a lot of that.'
     )
 
     return description
