@@ -42,40 +42,36 @@ class DevCog(commands.Cog):
     @dev.command()
     @commands.is_owner()
     @commands.bot_has_permissions(send_messages=True)
-    async def reload(self, ctx: commands.Context, mod_or_cog: str, *args: str) -> None:
+    async def reload(self, ctx: commands.Context, *args: str) -> None:
         """Reloads modules and cogs"""
-        message_syntax = strings.MSG_SYNTAX.format(syntax=f'{ctx.prefix}dev reload [mod|cog] [name(s)]')
+        message_syntax = strings.MSG_SYNTAX.format(syntax=f'{ctx.prefix}dev reload [name(s)]')
         if not args:
             await ctx.send(message_syntax)
             return
+        args = [arg.lower() for arg in args]
         actions = []
-        if mod_or_cog in ('lib','libs','modules','module','mod','mods'):
-            for module_name in args:
-                try:
-                    module = sys.modules.get(module_name)
-                    if module is not None:
-                        importlib.reload(module)
-                        actions.append(f'➜ Module \'{module_name}\' reloaded.')
-                    else:
-                        actions.append(f'➜ **Module \'{module_name}\' not found.**')
-                except Exception as error:
-                    await ctx.send(error)
-                    return
-        elif mod_or_cog in ('cog','cogs','extension','ext','extensions'):
-            cog_names = [f'cogs.{arg}' for arg in args]
-            for cog_name in cog_names:
-                try:
-                    cog_reload_status = self.bot.reload_extension(cog_name)
-                except:
-                    actions.append(f'➜ **Extension \'{cog_name}\' not found.**')
-                else:
-                    if cog_reload_status is None:
-                        actions.append(f'➜ Extension \'{cog_name}\' reloaded.')
-                    else:
-                        actions.append(f'{cog_reload_status}')
-        else:
-            await ctx.send(message_syntax)
-            return
+        for mod_or_cog in args:
+            name_found = False
+            if not 'cogs.' in mod_or_cog:
+                cog_name = f'cogs.{mod_or_cog}'
+            try:
+                cog_reload_status = self.bot.reload_extension(cog_name)
+            except:
+                cog_reload_status = 'Not loaded'
+            if cog_reload_status is None:
+                actions.append(f'➜ Extension \'{cog_name}\' reloaded.')
+                name_found = True
+            if not name_found:
+                for module_name in sys.modules.copy():
+                    if mod_or_cog in module_name:
+                        module = sys.modules.get(module_name)
+                        if module is not None:
+                            importlib.reload(module)
+                            actions.append(f'➜ Module \'{module_name}\' reloaded.')
+                            name_found = True
+            if not name_found:
+                actions.append(f'➜ **No module or cog with the name \'{mod_or_cog}\' found.**')
+
         message = ''
         for action in actions:
             message = f'{message}\n{action}'

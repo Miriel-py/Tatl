@@ -282,7 +282,7 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
 
     flex_thumbnails = {
         'work_ultra': 'https://c.tenor.com/4ReodhBihBQAAAAC/ruthe-biber.gif',
-        'work_hyper': 'https://tenor.com/view/ruthe-biber-axt-motorrad-motorcycle-gif-15486807',
+        'work_hyper': 'https://c.tenor.com/cFHSvohamvsAAAAC/ruthe-biber.gif',
         'pet_ultra': 'https://c.tenor.com/dHfN5MyGvyQAAAAC/cheerful-dog-billy-dog-billy.gif',
         'pet_ascend': 'https://c.tenor.com/yyiGOtquk74AAAAC/rocket-clicks-rocket.gif',
         'forge_godly': 'https://c.tenor.com/OSYJN4DF0tEAAAAC/light-up.gif',
@@ -313,15 +313,11 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
     embed_title = flex_titles[event]
     embed_description = await flex_description_functions[event](message_content)
 
-    if not '**Miriel** and' in message_content and 'FlyingPanda' in message_content:
-        embed_description = (
-            f'{embed_description}\n\n**All hail Panda!** :panda_face:'
-        )
-    if (not 'and **nad**' in message_content.lower()
-        and ("nad's" in message_content.lower() or '**nad**' in message_content.lower())):
-        embed_description = (
-            f'{embed_description}\n\n{emojis.SLAP}'
-        )
+    if '**FlyingPanda**' in embed_description:
+        embed_description = f'{embed_description}\n\n**All hail Panda!** :panda_face:'
+
+    if '**nad**' in embed_description:
+        embed_description = f'{embed_description}\n\n{emojis.SLAP}'
 
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
@@ -608,7 +604,7 @@ async def get_lb_omega_ultra_description(message_content: str) -> str:
         f'**{user_name}** opened an {emojis.LB_OMEGA} OMEGA lootbox!\n\n'
         f'And found {lb_amount} {emojis.LOG_ULTRA} ULTRA log in there on top!\n\n'
         f'Tbh they probably stole that box from the server owner.\n'
-        f'Something should arrest them, this is criminal.'
+        f'{emojis.POLICE}'
     )
 
     return description
