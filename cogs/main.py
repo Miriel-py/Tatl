@@ -78,8 +78,7 @@ class MainCog(commands.Cog):
     async def on_guild_join(self, guild: discord.Guild) -> None:
         """Fires when bot joins a guild. Sends a welcome message to the system channel."""
         try:
-            guild_settings = database.Guild
-            guild_settings = await database.get_guild(guild)
+            guild_settings: database.Guild = await database.get_guild(guild)
             prefix = guild_settings.prefix
             welcome_message = (
                 f'Hey! **{guild.name}**! I\'m here to alert you when an Epic RPG event pops up!\n'

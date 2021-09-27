@@ -45,6 +45,7 @@ LB_RARE = '<:erg_rarelootbox:770547275709415424>'
 LB_UNCOMMON = '<:erg_uncommonlootbox:770547275528667137>'
 
 # Materials
+ARENA_COOKIE = '<:erg_arenacookie:770324898068955186>'
 LOG_HYPER = '<:erg_hyperlog:770324898093596722>'
 LOG_ULTRA = '<:erg_ultralog:770324898345648179>'
 SEED = '<:erg_seed:824527296173047859>'

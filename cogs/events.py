@@ -62,10 +62,8 @@ class EventsCog(commands.Cog):
                 event = 'rumble'
 
             if not event == '':
-                guild_settings = database.Guild
-                event_settings = database.GuildEvent
-                guild_settings = await database.get_guild(message.guild)
-                event_settings = getattr(guild_settings, event)
+                guild_settings: database.Guild = await database.get_guild(message.guild)
+                event_settings: database.GuildEvent = getattr(guild_settings, event)
                 if event_settings.enabled:
                     if not event_settings.role_id == 0:
                         role = message.guild.get_role(event_settings.role_id)

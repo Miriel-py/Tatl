@@ -1,8 +1,6 @@
 # bot.py
 """Main bot file that instances and runs the bot and loads the extensions"""
 
-from datetime import datetime, timedelta
-
 import discord
 from discord.ext import commands
 

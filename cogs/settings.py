@@ -21,8 +21,7 @@ class SettingsCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def prefix(self, ctx: commands.Context, *args: str) -> None:
         """Gets/sets new server prefix"""
-        guild_settings = database.Guild
-        guild_settings = await database.get_guild(ctx)
+        guild_settings: database.Guild = await database.get_guild(ctx)
         prefix = guild_settings.prefix
         syntax = f'{prefix}prefix <prefix>'
         message_syntax = (
@@ -36,8 +35,7 @@ class SettingsCog(commands.Cog):
                 return
             (new_prefix,) = args
             await database.update_guild(ctx, prefix=new_prefix)
-            guild_settings = database.Guild
-            guild_settings = await database.get_guild(ctx)
+            guild_settings: database.Guild = await database.get_guild(ctx)
             await ctx.send(f'Prefix changed to `{guild_settings.prefix}`')
         else:
             await ctx.send(
@@ -300,8 +298,7 @@ def setup(bot):
 # --- Embeds ---
 async def embed_guild_settings(bot: commands.Bot, ctx: commands.Context) -> discord.Embed:
     """Settings embed"""
-    guild_settings = database.Guild
-    guild_settings = await database.get_guild(ctx)
+    guild_settings: database.Guild = await database.get_guild(ctx)
 
     embed = discord.Embed(
         color = settings.EMBED_COLOR,

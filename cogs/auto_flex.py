@@ -56,64 +56,64 @@ class AutoFlexCog(commands.Cog):
             if 'is this a **dream**????' in message_content.lower():
                 event = 'work_ultra'
                 logs.logger.info(message_content)
-            elif 'wwwwwoooooooooaaaaaaaa!!!!1' in message_content.lower():
+            if 'wwwwwoooooooooaaaaaaaa!!!!1' in message_content.lower():
                 event = 'work_hyper'
                 logs.logger.info(message_content)
-            elif 'pet adventure rewards' in message_content.lower() and 'ultra log' in message_content.lower():
+            if 'pet adventure rewards' in message_content.lower() and 'ultra log' in message_content.lower():
                 event = 'pet_ultra'
                 logs.logger.info(message_content)
-            elif 'this pet has obtained the **ascended** skill' in message_content.lower():
+            if 'this pet has obtained the **ascended** skill' in message_content.lower():
                 event = 'pet_ascend'
                 logs.logger.info(message_content)
-            elif 'the melting heat required to forge this sword was so much' in message_content.lower():
+            if 'the melting heat required to forge this sword was so much' in message_content.lower():
                 event = 'forge_godly'
                 logs.logger.info(message_content)
-            elif 'lootbox opened! (x100)' in message_content.lower():
+            if 'lootbox opened! (x100)' in message_content.lower():
                 event = 'lb_100'
                 logs.logger.info(message_content)
-            elif (('found and killed' in message_content.lower() or 'are hunting together' in message_content.lower())
+            if (('found and killed' in message_content.lower() or 'are hunting together' in message_content.lower())
                   and 'omega lootbox' in message_content.lower()):
                 event = 'lb_omega'
                 logs.logger.info(message_content)
-            elif (('found and killed' in message_content.lower() or 'are hunting together' in message_content.lower())
+            if (('found and killed' in message_content.lower() or 'are hunting together' in message_content.lower())
                   and 'godly lootbox' in message_content.lower()):
                 event = 'lb_godly'
                 logs.logger.info(message_content)
-            elif 'edgy lootbox opened!' in message_content.lower() and 'ultra log' in message_content.lower():
+            if 'edgy lootbox opened!' in message_content.lower() and 'ultra log' in message_content.lower():
                 event = 'lb_edgy_ultra'
                 logs.logger.info(message_content)
-            elif 'omega lootbox opened!' in message_content.lower() and 'ultra log' in message_content.lower():
+            if 'omega lootbox opened!' in message_content.lower() and 'ultra log' in message_content.lower():
                 event = 'lb_omega_ultra'
                 logs.logger.info(message_content)
-            elif 'has unlocked the **ascended skill**' in message_content.lower():
+            if 'has unlocked the **ascended skill**' in message_content.lower():
                 event = 'pr_ascension'
                 logs.logger.info(message_content)
-            elif 'has traveled in time' in message_content.lower():
+            if 'has traveled in time' in message_content.lower():
                 event = 'pr_timetravel'
                 logs.logger.info(message_content)
-            elif "'s enchant" in message_content.lower():
+            if "'s enchant" in message_content.lower():
                 if "equipment's enchant will be kept" in message_content.lower():
                     return
                 enchants = ['edgy','ultra-edgy','omega','ultra-omega','godly']
                 if any(enchant in message_content.lower() for enchant in enchants):
                     event = 'enchant_enchant'
                     logs.logger.info(message_content)
-            elif "'s refine" in message_content.lower():
+            if "'s refine" in message_content.lower():
                 enchants = ['ultra-edgy','omega','ultra-omega','godly']
                 if any(enchant in message_content.lower() for enchant in enchants):
                     event = 'enchant_refine'
                     logs.logger.info(message_content)
-            elif "'s transmute" in message_content.lower():
+            if "'s transmute" in message_content.lower():
                 enchants = ['omega','ultra-omega','godly']
                 if any(enchant in message_content.lower() for enchant in enchants):
                     event = 'enchant_transmute'
                     logs.logger.info(message_content)
-            elif "'s transcend" in message_content.lower():
+            if "'s transcend" in message_content.lower():
                 enchants = ['ultra-omega','godly']
                 if any(enchant in message_content.lower() for enchant in enchants):
                     event = 'enchant_transcend'
                     logs.logger.info(message_content)
-            elif "wait what? it landed on its side" in message_content.lower():
+            if "wait what? it landed on its side" in message_content.lower():
                 winnings_start_string = 'YOU WON '
                 winnings_start = message_content.find(winnings_start_string) + len(winnings_start_string)
                 winnings_end = message_content.find(' COINS', winnings_start)
@@ -129,7 +129,7 @@ class AutoFlexCog(commands.Cog):
                     return
                 event = 'gambling_coinflip'
                 logs.logger.info(message_content)
-            elif "'s slots" in message_content.lower():
+            if "'s slots" in message_content.lower():
                 icons = ['💎','💯','🎁','✨','🍀']
                 if any(message_content.lower().count(icon) == 5 for icon in icons):
                     winnings_start_string = 'You won **'
@@ -147,7 +147,7 @@ class AutoFlexCog(commands.Cog):
                         return
                     event = 'gambling_slots'
                     logs.logger.info(message_content)
-            elif ("'s wheel" in message_content.lower()) and ('you won' in message_content.lower()):
+            if ("'s wheel" in message_content.lower()) and ('you won' in message_content.lower()):
                 message_content_check = (message_content
                                          .encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                          .replace('U0001f7e6','').replace('U0001f7eb','').replace('U0001f7e7','')
@@ -170,39 +170,53 @@ class AutoFlexCog(commands.Cog):
                             f'Error: {error}\nFunction: on_message (wheel)\nwinnings: {winnings}'
                         )
                         return
-                    if winnings < 100_000_000:
+                    if winnings < 1_000_000_000:
                         return
                     event = 'gambling_wheel'
                     logs.logger.info(message_content)
-            elif 'accumulated failed attempts: 0' in message_content.lower():
+            if 'accumulated failed attempts: 0' in message_content.lower():
                 event = 'horse_tier'
                 logs.logger.info(message_content)
-            elif 'the legendary boss died! everyone leveled up' in message_content.lower():
+            if 'the legendary boss died! everyone leveled up' in message_content.lower():
                 event = 'event_boss'
                 logs.logger.info(message_content)
-            elif 'your lootbox has evolved to an omega lootbox' in message_content.lower():
+            if 'your lootbox has evolved to an omega lootbox' in message_content.lower():
                 event = 'event_lb'
                 logs.logger.info(message_content)
-            elif ('your sword got an ultra-edgy enchantment' in message_content.lower()
+            if ('your sword got an ultra-edgy enchantment' in message_content.lower()
                   or 'your armor got an ultra-edgy enchantment' in message_content.lower()):
                 event = 'event_enchant'
                 logs.logger.info(message_content)
-            elif 'the seed surrendered' in message_content.lower():
+            if 'the seed surrendered' in message_content.lower():
                 event = 'event_farm'
                 logs.logger.info(message_content)
-            elif 'killed the mysterious man' in message_content.lower():
+            if 'killed the mysterious man' in message_content.lower():
                 event = 'event_heal'
                 logs.logger.info(message_content)
-            elif 'killed the **epic guard**' in message_content.lower():
+            if 'killed the **epic guard**' in message_content.lower():
                 event = 'event_jail'
                 logs.logger.info(message_content)
-            elif ('fights the horde...' in message_content.lower()) and ('success!!' in message_content.lower()):
+            if ('fights the horde...' in message_content.lower()) and ('success!!' in message_content.lower()):
                 event = 'event_hunt'
                 logs.logger.info(message_content)
+            if " ate " in message_content.lower() and "arena cookie"in message_content.lower():
+                cookies_end = message_content.find(' <:arena')
+                cookies_start = message_content.rfind('**', 0, cookies_end) + 2
+                cookies = message_content[cookies_start:cookies_end]
+                try:
+                    cookies = int(cookies.replace(',','').strip())
+                except Exception as error:
+                    await database.log_error(
+                        f'Error: {error}\nFunction: on_message (cookies)\nCookie amount: {cookies}'
+                    )
+                    return
+                if cookies < 10_000:
+                    return
+                event = 'cookies'
+                logs.logger.info(message_content)
 
-            if not event == '':
-                guild_settings = database.Guild
-                guild_settings = await database.get_guild(message.guild)
+            if event != '':
+                guild_settings: database.Guild = await database.get_guild(message.guild)
                 if guild_settings.auto_flex_enabled and guild_settings.auto_flex_channel_id != 0:
                     await self.bot.wait_until_ready()
                     auto_flex_channel = self.bot.get_channel(guild_settings.auto_flex_channel_id)
@@ -247,7 +261,8 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'event_farm': f'{emojis.CROSSED_SWORDS} Totally believable level up story',
         'event_heal': f'{emojis.LIFE_POTION} Very mysterious',
         'event_jail': f'{emojis.EPIC_GUARD} But... why?',
-        'event_hunt': f'{emojis.ZOMBIE_EYE} Not quite a level'
+        'event_hunt': f'{emojis.ZOMBIE_EYE} Not quite a level',
+        'cookies': f'{emojis.ARENA_COOKIE} This is the dumbest thing, lol'
     }
 
     flex_description_functions = {
@@ -277,7 +292,8 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'event_farm': get_event_farm_description,
         'event_heal': get_event_heal_description,
         'event_jail': get_event_jail_description,
-        'event_hunt': get_event_hunt_description
+        'event_hunt': get_event_hunt_description,
+        'cookies': get_cookies_description
     }
 
     flex_thumbnails = {
@@ -287,7 +303,7 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'pet_ascend': 'https://c.tenor.com/yyiGOtquk74AAAAC/rocket-clicks-rocket.gif',
         'forge_godly': 'https://c.tenor.com/OSYJN4DF0tEAAAAC/light-up.gif',
         'lb_100': 'https://c.tenor.com/KEky01zvXLMAAAAC/we-bare-bears-grizzly.gif',
-        'lb_omega': 'https://c.tenor.com/7guOJxVGPoEAAAAC/ruthe-ralph.gif',
+        'lb_omega': 'https://c.tenor.com/3KSDRVvcptMAAAAC/apa-di-dalam-itu-box.gif',
         'lb_godly': 'https://c.tenor.com/U3I7KkH0w50AAAAC/unbeliavable-inconceivable.gif',
         'lb_edgy_ultra': 'https://c.tenor.com/clnoM8TeSxcAAAAC/wait-what-unbelievable.gif',
         'lb_omega_ultra': 'https://c.tenor.com/Dm7vWLpdTpcAAAAC/seinfeld.gif',
@@ -307,7 +323,8 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'event_farm': 'https://c.tenor.com/OEIwT0KEyREAAAAC/homer-fist.gif',
         'event_heal': 'https://c.tenor.com/IfAs08au8IYAAAAd/he-died-in-mysterious-circumstances-the-history-guy.gif',
         'event_jail': 'https://c.tenor.com/txj6Fp2ipqMAAAAC/prison-jail.gif',
-        'event_hunt': 'https://c.tenor.com/1YbbHo0BmEIAAAAC/pvz-plants-vs-zombies.gif'
+        'event_hunt': 'https://c.tenor.com/1YbbHo0BmEIAAAAC/pvz-plants-vs-zombies.gif',
+        'cookies': 'https://c.tenor.com/mbs-siKKowoAAAAd/cookie-monster-cookie-for-you.gif'
     }
 
     embed_title = flex_titles[event]
@@ -318,6 +335,9 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
 
     if '**nad**' in embed_description:
         embed_description = f'{embed_description}\n\n{emojis.SLAP}'
+
+    if '**RaYawsT**' in embed_description:
+        embed_description = f'{embed_description}\n\nWhy is Ray still spamming this channel {emojis.CAT_GUN}'
 
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
@@ -502,8 +522,8 @@ async def get_lb_omega_description(message_content: str) -> str:
 
     description = (
         f'**{user_name}** just found {lb_amount} {emojis.LB_OMEGA} OMEGA lootbox!\n\n'
-        f'If you\'re not Ray: CONGRATULATIONS!\n'
-        f'If you\'re Ray: Stop spamming this channel {emojis.CAT_GUN}'
+        f'Please remember that all OMEGA lootboxes need to be handed over to the server owner as payment for their server '
+        f'owner administration business.'
     )
 
     if partner_loot:
@@ -916,7 +936,7 @@ async def get_event_lb_description(message_content: str) -> str:
 
     description = (
         f'**{user_name}** used a magic spell on a lootbox for some reason which then evolved into an '
-        f'{emojis.emojis.LB_OMEGA} OMEGA lootbox.\n\n'
+        f'{emojis.LB_OMEGA} OMEGA lootbox.\n\n'
         f'Everything about this sounds unauthorized, so I\'ll be reporting this to the Ministry of Magic.'
     )
 
@@ -1008,6 +1028,33 @@ async def get_event_hunt_description(message_content: str) -> str:
         f'**{user_name}** killed a whole horde of zombies!\n\n'
         f'Well, actually, it was just {zombie_amount} zombies, lol.\n'
         f'Does that even qualify as a flex {emojis.SUS}'
+    )
+
+    return description
+
+
+async def get_cookies_description(message_content: str) -> str:
+    """Returns the embed description for the cookies event"""
+    user_name_end = message_content.find("** ate")
+    user_name_start = message_content.rfind('**', 0, user_name_end) + 2
+    user_name = message_content[user_name_start:user_name_end]
+
+    cookies_end = message_content.find(' <:arena')
+    cookies_start = message_content.rfind('**', 0, cookies_end) + 2
+    cookies = message_content[cookies_start:cookies_end]
+    try:
+        cookies = int(cookies.replace(',','').strip())
+    except Exception as error:
+        await database.log_error(
+            f'Error: {error}\nFunction: get_cookies_description\nCookie amount: {cookies}'
+        )
+        return
+
+    description = (
+        f'**{user_name}** ate {cookies:,} cookies.\n\n'
+        f'**{cookies:,} COOKIES.**\n\n'
+        f'**HAVE YOU ANY IDEA HOW MANY LEVELS THAT WOULD BE IF THEY COOKED SUPER COOKIES.**\n'
+        'I don\'t either but holymotherofgodicantevenholyhellwhy.'
     )
 
     return description

@@ -14,7 +14,7 @@ BOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_FILE = os.path.join(BOT_DIR, 'database/tatl_db.db')
 LOG_FILE = os.path.join(BOT_DIR, 'logs/discord.log')
 
-DONOR_COOLDOWNS = (1,0.9,0.8,0.65,)
+DONOR_COOLDOWNS = (1, 0.9, 0.8, 0.65,)
 
 DEFAULT_PREFIX = 'tatl '
 
