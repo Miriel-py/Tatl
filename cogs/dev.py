@@ -39,12 +39,13 @@ class DevCog(commands.Cog):
             mention_author=False
         )
 
-    @dev.command()
+    @dev.command(aliases=('unload','reload',))
     @commands.is_owner()
     @commands.bot_has_permissions(send_messages=True)
-    async def reload(self, ctx: commands.Context, *args: str) -> None:
-        """Reloads modules and cogs"""
-        message_syntax = strings.MSG_SYNTAX.format(syntax=f'{ctx.prefix}dev reload [name(s)]')
+    async def load(self, ctx: commands.Context, *args: str) -> None:
+        """Loads/unloads cogs and reloads cogs or modules"""
+        action = ctx.invoked_with
+        message_syntax = f'The syntax is `{ctx.prefix}dev {action} [name(s)]`'
         if not args:
             await ctx.send(message_syntax)
             return
@@ -55,27 +56,36 @@ class DevCog(commands.Cog):
             if not 'cogs.' in mod_or_cog:
                 cog_name = f'cogs.{mod_or_cog}'
             try:
-                cog_reload_status = self.bot.reload_extension(cog_name)
+                if action == 'load':
+                    cog_status = self.bot.load_extension(cog_name)
+                elif action == 'reload':
+                    cog_status = self.bot.reload_extension(cog_name)
+                else:
+                    cog_status = self.bot.unload_extension(cog_name)
             except:
-                cog_reload_status = 'Not loaded'
-            if cog_reload_status is None:
-                actions.append(f'➜ Extension \'{cog_name}\' reloaded.')
+                cog_status = 'Error'
+            if cog_status is None:
+                actions.append(f'+ Extension \'{cog_name}\' {action}ed.')
                 name_found = True
             if not name_found:
-                for module_name in sys.modules.copy():
-                    if mod_or_cog in module_name:
-                        module = sys.modules.get(module_name)
-                        if module is not None:
-                            importlib.reload(module)
-                            actions.append(f'➜ Module \'{module_name}\' reloaded.')
-                            name_found = True
+                if action == 'reload':
+                    for module_name in sys.modules.copy():
+                        if mod_or_cog in module_name:
+                            module = sys.modules.get(module_name)
+                            if module is not None:
+                                importlib.reload(module)
+                                actions.append(f'+ Module \'{module_name}\' reloaded.')
+                                name_found = True
             if not name_found:
-                actions.append(f'➜ **No module or cog with the name \'{mod_or_cog}\' found.**')
+                if action == 'reload':
+                    actions.append(f'- No cog with the name \'{mod_or_cog}\' found or cog not loaded.')
+                else:
+                    actions.append(f'- No cog with the name \'{mod_or_cog}\' found or cog already {action}ed.')
 
         message = ''
         for action in actions:
             message = f'{message}\n{action}'
-        await ctx.send(message)
+        await ctx.send(f'```diff\n{message}\n```')
 
     @dev.command()
     @commands.is_owner()

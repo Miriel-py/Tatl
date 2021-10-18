@@ -85,12 +85,16 @@ class AutoFlexCog(commands.Cog):
             if 'omega lootbox opened!' in message_content.lower() and 'ultra log' in message_content.lower():
                 event = 'lb_omega_ultra'
                 logs.logger.info(message_content)
+            if 'godly lootbox opened!' in message_content.lower() and 'time travel' in message_content.lower():
+                event = 'lb_godly_tt'
+                logs.logger.info(message_content)
             if 'has unlocked the **ascended skill**' in message_content.lower():
                 event = 'pr_ascension'
                 logs.logger.info(message_content)
             if 'has traveled in time' in message_content.lower():
                 event = 'pr_timetravel'
                 logs.logger.info(message_content)
+            """ Disabled because of enchant update, remove completely later
             if "'s enchant" in message_content.lower():
                 if "equipment's enchant will be kept" in message_content.lower():
                     return
@@ -113,6 +117,7 @@ class AutoFlexCog(commands.Cog):
                 if any(enchant in message_content.lower() for enchant in enchants):
                     event = 'enchant_transcend'
                     logs.logger.info(message_content)
+            """
             if "wait what? it landed on its side" in message_content.lower():
                 winnings_start_string = 'YOU WON '
                 winnings_start = message_content.find(winnings_start_string) + len(winnings_start_string)
@@ -245,6 +250,7 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'lb_godly': f'{emojis.LB_GODLY} WAIT WHAT?',
         'lb_edgy_ultra': f'{emojis.LOG_ULTRA} It\'s just an EDGY, lol',
         'lb_omega_ultra': f'{emojis.LOG_ULTRA} That\'s a lot of wood',
+        'lb_godly_tt': f'{emojis.TIME_TRAVEL} WHAT. THE. SHIT.',
         'pr_ascension': f'{emojis.ASCENSION} Up up and away',
         'pr_timetravel': f'{emojis.TIME_TRAVEL} Allons-y!',
         'enchant_enchant': f'{emojis.ENCHANTMENT} Simply enchanting!',
@@ -276,6 +282,7 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'lb_godly': get_lb_godly_description,
         'lb_edgy_ultra': get_lb_edgy_ultra_description,
         'lb_omega_ultra': get_lb_omega_ultra_description,
+        'lb_godly_tt': get_lb_godly_tt_description,
         'pr_ascension': get_pr_ascension_description,
         'pr_timetravel': get_pr_timetravel_description,
         'enchant_enchant': get_enchant_enchant_description,
@@ -299,16 +306,17 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
     flex_thumbnails = {
         'work_ultra': 'https://c.tenor.com/4ReodhBihBQAAAAC/ruthe-biber.gif',
         'work_hyper': 'https://c.tenor.com/cFHSvohamvsAAAAC/ruthe-biber.gif',
-        'pet_ultra': 'https://c.tenor.com/dHfN5MyGvyQAAAAC/cheerful-dog-billy-dog-billy.gif',
+        'pet_ultra': 'https://c.tenor.com/nwbxEGQINOsAAAAC/pet-dog.gif',
         'pet_ascend': 'https://c.tenor.com/yyiGOtquk74AAAAC/rocket-clicks-rocket.gif',
         'forge_godly': 'https://c.tenor.com/OSYJN4DF0tEAAAAC/light-up.gif',
-        'lb_100': 'https://c.tenor.com/KEky01zvXLMAAAAC/we-bare-bears-grizzly.gif',
-        'lb_omega': 'https://c.tenor.com/3KSDRVvcptMAAAAC/apa-di-dalam-itu-box.gif',
-        'lb_godly': 'https://c.tenor.com/U3I7KkH0w50AAAAC/unbeliavable-inconceivable.gif',
+        'lb_100': 'https://c.tenor.com/gHygBs_JkKwAAAAi/moving-boxes.gif',
+        'lb_omega': 'https://c.tenor.com/iRn9h2dTMhcAAAAi/mochi-mochi-peach-cat-cat.gif',
+        'lb_godly': 'https://c.tenor.com/zBe7Ew1lzPYAAAAi/tkthao219-bubududu.gif',
         'lb_edgy_ultra': 'https://c.tenor.com/clnoM8TeSxcAAAAC/wait-what-unbelievable.gif',
-        'lb_omega_ultra': 'https://c.tenor.com/Dm7vWLpdTpcAAAAC/seinfeld.gif',
+        'lb_omega_ultra': 'https://c.tenor.com/dBaynU7zBaIAAAAi/love-box.gif',
+        'lb_godly_tt': 'https://c.tenor.com/-BVQhBulOmAAAAAC/bruce-almighty-morgan-freeman.gif',
         'pr_ascension': 'https://c.tenor.com/Jpx1xCUOyz8AAAAC/ascend.gif',
-        'pr_timetravel': 'https://c.tenor.com/nZ9IFupOViUAAAAC/keanu-reeves.gif',
+        'pr_timetravel': 'https://c.tenor.com/xXXrBidPuPEAAAAC/back-to-the-future-doc-brown.gif',
         'enchant_enchant': 'https://c.tenor.com/0LZHWJz6lLIAAAAC/sword-in-the-stone-excalibur.gif',
         'enchant_refine': 'https://c.tenor.com/-08JLwayFF8AAAAC/sword-inuyasha.gif',
         'enchant_transmute': 'https://c.tenor.com/AvGZ4QEw6xUAAAAC/sword.gif',
@@ -317,13 +325,13 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'gambling_slots': 'https://c.tenor.com/vh6UO80RFmYAAAAC/toilet-paper-slot-machine.gif',
         'gambling_wheel': 'https://c.tenor.com/lmetHrqB8k4AAAAC/flossen-bubbles.gif',
         'horse_tier': 'https://c.tenor.com/FMdPKbgHXbsAAAAC/horse-laugh.gif',
-        'event_boss': 'https://c.tenor.com/ARAF0r6nJQAAAAAC/dragon-rawr.gif',
+        'event_boss': 'https://c.tenor.com/dAMi0gNJQeIAAAAC/peach-cat.gif',
         'event_lb': 'https://c.tenor.com/6WfJrQYFXlYAAAAC/magic-kazaam.gif',
         'event_enchant': 'https://c.tenor.com/gAuPzxRCVw8AAAAC/link-dancing.gif',
         'event_farm': 'https://c.tenor.com/OEIwT0KEyREAAAAC/homer-fist.gif',
         'event_heal': 'https://c.tenor.com/IfAs08au8IYAAAAd/he-died-in-mysterious-circumstances-the-history-guy.gif',
         'event_jail': 'https://c.tenor.com/txj6Fp2ipqMAAAAC/prison-jail.gif',
-        'event_hunt': 'https://c.tenor.com/1YbbHo0BmEIAAAAC/pvz-plants-vs-zombies.gif',
+        'event_hunt': 'https://c.tenor.com/PQ5Q7_GwZucAAAAi/panda-zombie-smiling.gif',
         'cookies': 'https://c.tenor.com/mbs-siKKowoAAAAd/cookie-monster-cookie-for-you.gif'
     }
 
@@ -337,7 +345,7 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         embed_description = f'{embed_description}\n\n{emojis.SLAP}'
 
     if '**RaYawsT**' in embed_description:
-        embed_description = f'{embed_description}\n\nWhy is Ray still spamming this channel {emojis.CAT_GUN}'
+        embed_description = f'{embed_description}\n\nRay again smh {emojis.CAT_GUN}'
 
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
@@ -522,8 +530,7 @@ async def get_lb_omega_description(message_content: str) -> str:
 
     description = (
         f'**{user_name}** just found {lb_amount} {emojis.LB_OMEGA} OMEGA lootbox!\n\n'
-        f'Please remember that all OMEGA lootboxes need to be handed over to the server owner as payment for their server '
-        f'owner administration business.'
+        f'Lol, that\'s not even a godly.'
     )
 
     if partner_loot:
@@ -625,6 +632,33 @@ async def get_lb_omega_ultra_description(message_content: str) -> str:
         f'And found {lb_amount} {emojis.LOG_ULTRA} ULTRA log in there on top!\n\n'
         f'Tbh they probably stole that box from the server owner.\n'
         f'{emojis.POLICE}'
+    )
+
+    return description
+
+
+async def get_lb_godly_tt_description(message_content: str) -> str:
+    """Returns the embed description for the lb_godly_tt event"""
+    user_name_end = message_content.find("'s lootbox")
+    user_name_start = message_content.rfind('"', 0, user_name_end) + 1
+    user_name = message_content[user_name_start:user_name_end]
+
+    tt_amount_end = message_content.find(' :cyclone')
+    tt_amount_start = message_content.rfind('+', 0, tt_amount_end) + 1
+    tt_amount = message_content[tt_amount_start:tt_amount_end]
+    try:
+        tt_amount = int(tt_amount.strip())
+    except Exception as error:
+        await database.log_error(
+            f'Error: {error}\nFunction: get_lb_godly_tt_description\ntt_amount: {tt_amount}'
+        )
+        return
+
+    description = (
+        f'So.\n**{user_name}** opened an {emojis.LB_GODLY} GODLY lootbox.\nThat\'s cool.\n\n'
+        f'BUT.\nFor some reason they found {tt_amount} {emojis.TIME_TRAVEL} fucking time travels in there. HOW!!\n\n'
+        f'This is probably a world first, so expect to be blacklisted from the game.\n'
+        f'Before that, go share it in the EROS loot channel tho, they will go crazy.'
     )
 
     return description
