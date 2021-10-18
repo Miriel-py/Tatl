@@ -70,7 +70,7 @@ class DevCog(commands.Cog):
             if not name_found:
                 if action == 'reload':
                     for module_name in sys.modules.copy():
-                        if mod_or_cog in module_name:
+                        if mod_or_cog == module_name:
                             module = sys.modules.get(module_name)
                             if module is not None:
                                 importlib.reload(module)
