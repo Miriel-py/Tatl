@@ -467,7 +467,7 @@ async def get_lb_100_description(message_content: str) -> str:
         'common': emojis.LB_COMMON,
         'uncommon': emojis.LB_UNCOMMON,
         'rare': emojis.LB_RARE,
-        'epic': emojis.LB_RARE,
+        'epic': emojis.LB_EPIC,
         'edgy': emojis.LB_EDGY,
         'omega': emojis.LB_OMEGA,
         'godly': emojis.LB_GODLY

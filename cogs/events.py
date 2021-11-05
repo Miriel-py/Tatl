@@ -61,6 +61,20 @@ class EventsCog(commands.Cog):
                 or 'Bet battle. Fee will automatically be deducted.' in message_content):
                 event = 'rumble'
 
+            # Halloween boss
+            elif '**THE PUMPKIN BAT** IS ATTACKING YOU FROM BEHIND!' in message_content:
+                await message.channel.send('`DODGE`')
+                return
+            elif '**THE PUMPKIN BAT** IS ATTACKING YOU FROM THE LEFT!' in message_content:
+                await message.channel.send('`PUMPKIN`')
+                return
+            elif '**THE PUMPKIN BAT** IS ATTACKING YOU FROM THE RIGHT!' in message_content:
+                await message.channel.send('`T POSE`')
+                return
+            elif '**THE PUMPKIN BAT** IS ATTACKING YOU AHEAD!' in message_content:
+                await message.channel.send('`APPLE`')
+                return
+
             if not event == '':
                 guild_settings: database.Guild = await database.get_guild(message.guild)
                 event_settings: database.GuildEvent = getattr(guild_settings, event)
