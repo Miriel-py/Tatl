@@ -62,7 +62,8 @@ class AutoFlexCog(commands.Cog):
             if 'pet adventure rewards' in message_content.lower() and 'ultra log' in message_content.lower():
                 event = 'pet_ultra'
                 logs.logger.info(message_content)
-            if 'this pet has obtained the **ascended** skill' in message_content.lower():
+            if ('this pet has obtained the **ascended** skill' in message_content.lower()
+                or 'this pet has advanced its **ascended** skill' in message_content.lower()):
                 event = 'pet_ascend'
                 logs.logger.info(message_content)
             if 'the melting heat required to forge this sword was so much' in message_content.lower():
@@ -75,9 +76,30 @@ class AutoFlexCog(commands.Cog):
                   and 'omega lootbox' in message_content.lower()):
                 event = 'lb_omega'
                 logs.logger.info(message_content)
+            # Christmas godly present
+            if (('found and killed' in message_content.lower() or 'are hunting together' in message_content.lower())
+                and 'godly present' in message_content.lower()):
+                event = 'present_godly'
+                logs.logger.info(message_content)
+            if 'seed in the ground' in message_content.lower() and 'godly present' in message_content.lower():
+                event = 'present_godly_farm'
+                logs.logger.info(message_content)
+            if 'well done,' in message_content.lower() and 'godly present' in message_content.lower():
+                event = 'present_godly_training'
+                logs.logger.info(message_content)
+            if ((('quest' in message_content.lower() and 'completed!' in message_content.lower()) or 'wave #1' in message_content.lower())
+                and 'godly present' in message_content.lower()):
+                event = 'present_godly_quest'
+                logs.logger.info(message_content)
+
+
             if (('found and killed' in message_content.lower() or 'are hunting together' in message_content.lower())
                   and 'godly lootbox' in message_content.lower()):
                 event = 'lb_godly'
+                logs.logger.info(message_content)
+            if (('found and killed' in message_content.lower() or 'are hunting together' in message_content.lower())
+                  and 'mysterious lootbox' in message_content.lower()):
+                event = 'lb_mysterious'
                 logs.logger.info(message_content)
             if 'edgy lootbox opened!' in message_content.lower() and 'ultra log' in message_content.lower():
                 event = 'lb_edgy_ultra'
@@ -268,7 +290,12 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'event_heal': f'{emojis.LIFE_POTION} Very mysterious',
         'event_jail': f'{emojis.EPIC_GUARD} But... why?',
         'event_hunt': f'{emojis.ZOMBIE_EYE} Not quite a level',
-        'cookies': f'{emojis.ARENA_COOKIE} This is the dumbest thing, lol'
+        'cookies': f'{emojis.ARENA_COOKIE} This is the dumbest thing, lol',
+        'lb_mysterious': f'{emojis.LB_MYSTERIOUS} What on earth is this?',
+        'present_godly': f'{emojis.PRESENT_GODLY} Oh, hello Santa!',
+        'present_godly_farm': f'{emojis.PRESENT_GODLY} Oh, hello Santa!',
+        'present_godly_training': f'{emojis.PRESENT_GODLY} Oh, hello Santa!',
+        'present_godly_quest': f'{emojis.PRESENT_GODLY} Oh, hello Santa!',
     }
 
     flex_description_functions = {
@@ -300,12 +327,17 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'event_heal': get_event_heal_description,
         'event_jail': get_event_jail_description,
         'event_hunt': get_event_hunt_description,
-        'cookies': get_cookies_description
+        'cookies': get_cookies_description,
+        'lb_mysterious': get_lb_mysterious_description,
+        'present_godly': get_present_godly_description,
+        'present_godly_farm': get_present_godly_farm_description,
+        'present_godly_training': get_present_godly_training_description,
+        'present_godly_quest': get_present_godly_quest_description,
     }
 
     flex_thumbnails = {
         'work_ultra': 'https://c.tenor.com/4ReodhBihBQAAAAC/ruthe-biber.gif',
-        'work_hyper': 'https://c.tenor.com/cFHSvohamvsAAAAC/ruthe-biber.gif',
+        'work_hyper': 'https://c.tenor.com/p8NKGRDxNvMAAAAC/rut-daniels-timber.gif',
         'pet_ultra': 'https://c.tenor.com/nwbxEGQINOsAAAAC/pet-dog.gif',
         'pet_ascend': 'https://c.tenor.com/yyiGOtquk74AAAAC/rocket-clicks-rocket.gif',
         'forge_godly': 'https://c.tenor.com/OSYJN4DF0tEAAAAC/light-up.gif',
@@ -332,20 +364,25 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'event_heal': 'https://c.tenor.com/IfAs08au8IYAAAAd/he-died-in-mysterious-circumstances-the-history-guy.gif',
         'event_jail': 'https://c.tenor.com/txj6Fp2ipqMAAAAC/prison-jail.gif',
         'event_hunt': 'https://c.tenor.com/PQ5Q7_GwZucAAAAi/panda-zombie-smiling.gif',
-        'cookies': 'https://c.tenor.com/mbs-siKKowoAAAAd/cookie-monster-cookie-for-you.gif'
+        'cookies': 'https://c.tenor.com/mbs-siKKowoAAAAd/cookie-monster-cookie-for-you.gif',
+        'lb_mysterious': 'https://c.tenor.com/3ViKggOJ8PAAAAAC/spongebob-empty-box.gif',
+        'present_godly': 'https://c.tenor.com/V0Z6XInA21UAAAAC/teletubbies-dipsy.gif',
+        'present_godly_farm': 'https://c.tenor.com/V0Z6XInA21UAAAAC/teletubbies-dipsy.gif',
+        'present_godly_training': 'https://c.tenor.com/V0Z6XInA21UAAAAC/teletubbies-dipsy.gif',
+        'present_godly_quest': 'https://c.tenor.com/V0Z6XInA21UAAAAC/teletubbies-dipsy.gif',
     }
 
     embed_title = flex_titles[event]
     embed_description = await flex_description_functions[event](message_content)
 
     if '**FlyingPanda**' in embed_description:
-        embed_description = f'{embed_description}\n\n**All hail Panda!** :panda_face:'
+        embed_description = f'{embed_description}\n\n:panda_face:'
 
     if '**nad**' in embed_description:
-        embed_description = f'{embed_description}\n\n{emojis.SLAP}'
+        embed_description = f'{embed_description}\n\nThis is not Neat {emojis.SLAP}'
 
     if '**RaYawsT**' in embed_description:
-        embed_description = f'{embed_description}\n\nRay again smh {emojis.CAT_GUN}'
+        embed_description = f'{embed_description}\n\nRay-Ban® {emojis.CAT_GUN}'
 
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
@@ -372,9 +409,8 @@ async def get_work_ultra_description(message_content: str) -> str:
     log_amount = message_content[log_amount_start:log_amount_end].strip()
 
     description = (
-        f'**{user_name}** just found {log_amount} {emojis.LOG_ULTRA} ULTRA logs while "working".\n\n'
-        f'And by "working" they apparently mean "having a mental breakdown".\n'
-        f'Why else would they put a chainsaw in their mouth.'
+        f'**{user_name}** just cut down {log_amount} {emojis.LOG_ULTRA} ULTRA logs with a chainsaw. In their mouth.\n\n'
+        f'Look. Let\'s all just... back away... slowly...'
     )
 
     return description
@@ -392,8 +428,9 @@ async def get_work_hyper_description(message_content: str) -> str:
     log_amount = message_content[log_amount_start:log_amount_end].strip()
 
     description = (
-        f'**{user_name}** used a tree as a punching bag and ended up with {log_amount} {emojis.LOG_HYPER} HYPER logs.\n\n'
-        f'Better stay at a distance, kids, this doesn\'t look safe.'
+        f'**{user_name}** was taking a walk in the park, when suddenly a tree fell over and split into {log_amount} {emojis.LOG_HYPER} HYPER logs.\n\n'
+        f'You couldn\'t make this up, honestly.\n\n'
+        f'Oh wait. You can.'
     )
 
     return description
@@ -420,9 +457,8 @@ async def get_pet_ultra_description(message_content: str) -> str:
         log_amount_search_start = log_amount_end + len(log_amount_string)
 
     description = (
-        f'**{user_name}** got {log_amount_total} {emojis.LOG_ULTRA} ULTRA logs by doing nothing at all and letting their '
-        f'pets do all the work.\n\n'
-        f'STOP PET SLAVERY!'
+        f'**{user_name}** got {log_amount_total} {emojis.LOG_ULTRA} ULTRA logs from their pets.\n\n'
+        f'Why? Nobody knows. But I call this illegal pet labor, so I will report it.'
     )
 
     return description
@@ -455,7 +491,8 @@ async def get_forge_godly_description(message_content: str) -> str:
     description = (
         f'**{user_name}** forged a GODLY sword!\n\n'
         f'Wowzers, what an amazing thing!\n\n'
-        f'Oh wait. It has 0 AT, lol.'
+        f'Oh wait. It has 0 AT, lol.\n\n'
+        f'Some folks really to anything for fame, I swear.'
     )
 
     return description
@@ -488,8 +525,10 @@ async def get_lb_100_description(message_content: str) -> str:
         return
 
     description = (
-        f'**{user_name}** managed to ~~hoard~~ open 100 {lb_emoji} {lb_type} lootboxes at once.\n\n'
-        f'What a ~~hoarder~~ dedicated fellow!'
+        f'**{user_name}** opened 100 {lb_emoji} {lb_type} lootboxes at once.\n\n'
+        f'You know what that means? They opened **100** lootboxes and not a single one of those triggered the lootbox '
+        f'event.\n'
+        f'Woahaha.'
     )
 
     return description
@@ -530,7 +569,9 @@ async def get_lb_omega_description(message_content: str) -> str:
 
     description = (
         f'**{user_name}** just found {lb_amount} {emojis.LB_OMEGA} OMEGA lootbox!\n\n'
-        f'Lol, that\'s not even a godly.'
+        f'Exciting stuff.\n\n'
+        f'In other news, China recently issued a statement about that fallen rice enclosure. Looks like the situation is still '
+        f'unclear. We will keep you posted.'
     )
 
     if partner_loot:
@@ -604,7 +645,7 @@ async def get_lb_edgy_ultra_description(message_content: str) -> str:
         f'Look at **{user_name}**, opening that {emojis.LB_EDGY} EDGY lootbox like it\'s worth something, haha.\n\n'
         f'See. All he got is {lb_amount} lousy {emojis.LOG_ULTRA} ULTRA log.\n\n'
         f'...\n\n'
-        f'**How.**'
+        f'**WAIT A SECOND.**'
     )
 
     return description
@@ -629,8 +670,9 @@ async def get_lb_omega_ultra_description(message_content: str) -> str:
 
     description = (
         f'**{user_name}** opened an {emojis.LB_OMEGA} OMEGA lootbox!\n\n'
-        f'And found {lb_amount} {emojis.LOG_ULTRA} ULTRA log in there on top!\n\n'
-        f'Tbh they probably stole that box from the server owner.\n'
+        f'How exciting. I think. Or not.\n\n'
+        f'Wait! They found {lb_amount} {emojis.LOG_ULTRA} ULTRA log in there!\n\n'
+        f'That\'s how you get caught hacking, kids, time to ban.\n'
         f'{emojis.POLICE}'
     )
 
@@ -656,7 +698,7 @@ async def get_lb_godly_tt_description(message_content: str) -> str:
 
     description = (
         f'So.\n**{user_name}** opened an {emojis.LB_GODLY} GODLY lootbox.\nThat\'s cool.\n\n'
-        f'BUT.\nFor some reason they found {tt_amount} {emojis.TIME_TRAVEL} fucking time travels in there. HOW!!\n\n'
+        f'BUT.\nFor some reason they found {tt_amount} {emojis.TIME_TRAVEL} fucking time travels in there. HOW?!\n\n'
         f'This is probably a world first, so expect to be blacklisted from the game.\n'
         f'Before that, go share it in the EROS loot channel tho, they will go crazy.'
     )
@@ -687,9 +729,7 @@ async def get_pr_timetravel_description(message_content: str) -> str:
 
     description = (
         f'**{user_name}** just traveled in time!\n\n'
-        f'To, uh, area 1.\n'
-        f'Why would anyone do that?\n'
-        f'Doesn\'t even have any gear anymore, lol, what a noob.'
+        f'Don\'t time travel too fast tho, or you start going backwards. Ask Einstein.'
     )
 
     return description
@@ -956,7 +996,7 @@ async def get_event_boss_description(message_content: str) -> str:
 
     description = (
         f'{description_user_names} defeated a {emojis.EVENT_BOSS} legendary boss in an epic fight! Wooh!\n\n'
-        f'Why didn\'t YOU help, though.'
+        f'Somehow all of them survived, too, so we still have to keep up with them, I guess.'
     )
 
     return description
@@ -1087,8 +1127,156 @@ async def get_cookies_description(message_content: str) -> str:
     description = (
         f'**{user_name}** ate {cookies:,} cookies.\n\n'
         f'**{cookies:,} COOKIES.**\n\n'
-        f'**HAVE YOU ANY IDEA HOW MANY LEVELS THAT WOULD BE IF THEY COOKED SUPER COOKIES.**\n'
-        'I don\'t either but holymotherofgodicantevenholyhellwhy.'
+        f'**HAVE YOU **ANY** IDEA HOW MANY LEVELS THAT WOULD BE IF THEY COOKED SUPER COOKIES?**\n'
+        'Achievement, they say. Bah. Nonsense I say.'
+    )
+
+    return description
+
+
+async def get_lb_mysterious_description(message_content: str) -> str:
+    """Returns the embed description for the lb_mysterious event"""
+    hunt_together = True if 'are hunting together' in message_content else False
+
+    if hunt_together:
+        user_name_search = "** and **"
+        user_name_end = message_content.find(user_name_search)
+        partner_name_start = user_name_end + len(user_name_search)
+        partner_name_end = message_content.find("** are", partner_name_start)
+        partner_name = message_content[partner_name_start:partner_name_end]
+    else:
+        user_name_end = message_content.find("** found and killed")
+    user_name_start = message_content.rfind('**', 0, user_name_end) + 2
+    user_name = message_content[user_name_start:user_name_end]
+
+    lb_amount_end = message_content.find(' <:mysterious')
+    lb_amount_start_search = f'**{user_name}** got '
+    lb_amount_start = message_content.rfind(lb_amount_start_search, 0, lb_amount_end) + len(lb_amount_start_search)
+    partner_loot = False
+    if hunt_together and lb_amount_end - lb_amount_start > 3:
+        lb_amount_start_search_partner = f'**{partner_name}** got '
+        lb_amount_start = (message_content
+                           .rfind(lb_amount_start_search_partner, 0, lb_amount_end)
+                           + len(lb_amount_start_search_partner))
+        partner_loot = True
+
+    lb_amount = message_content[lb_amount_start:lb_amount_end]
+    try:
+        lb_amount = int(lb_amount.strip())
+    except Exception as error:
+        await database.log_error(f'Error: {error}\nFunction: get_lb_mysterious_description\nlootbox_amount: {lb_amount}')
+        return
+
+    description = (
+        f'So, uh, **{user_name}** found {lb_amount} {emojis.LB_MYSTERIOUS} mysterious lootbox.\n\n'
+        f'What is it? Where does it come from? Who can open it? What is love?\n'
+        f'It is a mystery, my friends.\n'
+        f'Time will tell, maybe. Or maybe not? Who knows. In the meantime, enjoy your troll box.'
+    )
+
+    if partner_loot:
+        description = f'{description}\n\n(Luckily, their partner stole it, so they won\'t have to bother trying to open it)'
+
+    return description
+
+
+async def get_present_godly_description(message_content: str) -> str:
+    """Returns the embed description for the lb_omega event"""
+    hunt_together = True if 'are hunting together' in message_content else False
+
+    if hunt_together:
+        user_name_search = "** and **"
+        user_name_end = message_content.find(user_name_search)
+        partner_name_start = user_name_end + len(user_name_search)
+        partner_name_end = message_content.find("** are", partner_name_start)
+        partner_name = message_content[partner_name_start:partner_name_end]
+    else:
+        user_name_end = message_content.find("** found and killed")
+    user_name_start = message_content.rfind('**', 0, user_name_end) + 2
+    user_name = message_content[user_name_start:user_name_end]
+
+    lb_amount_end = message_content.find('**<:GODLY')
+    lb_amount_start_search = f'**{user_name}** got '
+    lb_amount_start = message_content.rfind(lb_amount_start_search, 0, lb_amount_end) + len(lb_amount_start_search)
+    partner_loot = False
+    if hunt_together and lb_amount_end - lb_amount_start > 3:
+        lb_amount_start_search_partner = f'**{partner_name}** got '
+        lb_amount_start = (message_content
+                           .rfind(lb_amount_start_search_partner, 0, lb_amount_end)
+                           + len(lb_amount_start_search_partner))
+        partner_loot = True
+
+    lb_amount = message_content[lb_amount_start:lb_amount_end].strip()
+
+    description = (
+        f'**{user_name}** found {lb_amount} {emojis.PRESENT_GODLY} GODLY present. Shiny!\n\n'
+        f'This is completely warranted, and they clearly deserve that nice present more than you. I\'m sure you agree!'
+    )
+
+    if partner_loot:
+        description = f'{description}\n\n(Don\'t tell them, but the present was actually for their partner lmao)'
+
+    return description
+
+
+async def get_present_godly_farm_description(message_content: str) -> str:
+    """Returns the embed description for the lb_omega event"""
+
+    user_name_end = message_content.find("** plants")
+    user_name_start = message_content.rfind('**', 0, user_name_end) + 2
+    user_name = message_content[user_name_start:user_name_end]
+
+    lb_amount_end = message_content.find('**<:GODLY')
+    lb_amount_start_search = f'**{user_name}** got '
+    lb_amount_start = message_content.rfind(lb_amount_start_search, 0, lb_amount_end) + len(lb_amount_start_search)
+
+    lb_amount = message_content[lb_amount_start:lb_amount_end].strip()
+
+    description = (
+        f'**{user_name}** found {lb_amount} {emojis.PRESENT_GODLY} GODLY present. Shiny!\n\n'
+        f'This is completely warranted, and they clearly deserve that nice present more than you. I\'m sure you agree!'
+    )
+
+    return description
+
+
+async def get_present_godly_training_description(message_content: str) -> str:
+    """Returns the embed description for the lb_omega event"""
+
+    user_name_end = message_content.find("** !")
+    user_name_start = message_content.rfind('**', 0, user_name_end) + 2
+    user_name = message_content[user_name_start:user_name_end]
+
+    lb_amount_end = message_content.find('**<:GODLY')
+    lb_amount_start_search = f'**{user_name}** got '
+    lb_amount_start = message_content.rfind(lb_amount_start_search, 0, lb_amount_end) + len(lb_amount_start_search)
+
+    lb_amount = message_content[lb_amount_start:lb_amount_end]
+
+    description = (
+        f'**{user_name}** found {lb_amount} {emojis.PRESENT_GODLY} GODLY present. Shiny!\n\n'
+        f'This is completely warranted, and they clearly deserve that nice present more than you. I\'m sure you agree!'
+    )
+
+    return description
+
+
+async def get_present_godly_quest_description(message_content: str) -> str:
+    """Returns the embed description for the lb_omega event"""
+
+    user_name_end = message_content.find("** got")
+    user_name_start = message_content.rfind('**', 0, user_name_end) + 2
+    user_name = message_content[user_name_start:user_name_end]
+
+    lb_amount_end = message_content.find('**<:GODLY')
+    lb_amount_start_search = f'**{user_name}** got '
+    lb_amount_start = message_content.rfind(lb_amount_start_search, 0, lb_amount_end) + len(lb_amount_start_search)
+
+    lb_amount = message_content[lb_amount_start:lb_amount_end].strip()
+
+    description = (
+        f'**{user_name}** found {lb_amount} {emojis.PRESENT_GODLY} GODLY present. Shiny!\n\n'
+        f'This is completely warranted, and they clearly deserve that nice present more than you. I\'m sure you agree!'
     )
 
     return description
