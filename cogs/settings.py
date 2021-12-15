@@ -2,6 +2,7 @@
 """Contains settings commands"""
 
 import asyncio
+from typing import Literal, Optional
 
 import discord
 from discord.ext import commands
@@ -174,78 +175,43 @@ class SettingsCog(commands.Cog):
     @commands.command(name='event-message', aliases=('message',))
     @commands.has_permissions(manage_guild=True)
     @commands.bot_has_permissions(send_messages=True, read_message_history=True)
-    async def event_message(self, ctx: commands.Context, *args: str) -> None:
+    async def event_message(self, ctx: commands.Context,
+                            event: Literal[
+                                'all',
+                                'arena',
+                                'catch',
+                                'chop',
+                                'fish',
+                                'legendary-boss',
+                                'miniboss',
+                                'rumble-royale',
+                                'summon'] = commands.Option(description='Event the message is for'),
+                            message: Optional[str] = commands.Option(description='Message to send. If omitted, the message will reset.')
+                            ) -> None:
         """Sets/resets event messages"""
-        def check(message):
-            return message.author == ctx.author and message.channel == ctx.channel
 
-        prefix = ctx.prefix
-        syntax = f'{prefix}event-message <event> [<message>|reset]'
-        alert_list = f'Available alerts:\n{emojis.BP} `all`'
-        for alert in strings.ALERTS:
-            alert_list = f'{alert_list}\n{emojis.BP} `{alert}`'
-        message_syntax = (
-            f'{strings.MSG_SYNTAX.format(syntax=syntax)}\n\n'
-            f'{alert_list}'
-        )
-
-        if not args:
-            await ctx.reply(f'This command updates or resets the message that is sent when an event occurs.\n{message_syntax}', mention_author=False)
-            return
-
-        arg_alert, *arg_message = args
-        arg_alert = arg_alert.lower()
-        reset = False
-        if len(args) == 2 and arg_message[0].lower() == 'reset':
-            reset = True
-            message = None
-            del arg_message[0]
-        if not reset:
-            if arg_message:
-                message = ''
-                for arg in arg_message:
-                    message = f'{message} {arg}'
-            else:
-                await ctx.reply(f'**{ctx.author.name}**, please enter the alert message your want to set: (type `abort` to abort)', mention_author=False)
-                try:
-                    answer = await self.bot.wait_for('message', check=check, timeout=60)
-                except asyncio.TimeoutError as error:
-                    await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
-                    return
-                if answer.content.lower() in ('abort','cancel'):
-                    await ctx.send('Aborted.')
-                    return
-                message = answer.content
-            message = message.strip()
-        alerts = strings.ROLES_MESSAGES if arg_alert == 'all' else [arg_alert,]
+        alerts = strings.ROLES_MESSAGES if event == 'all' else [event,]
 
         update_alerts = {}
-        ignored_alerts, updated_alerts = [], []
+        updated_alerts = []
         for alert in alerts:
-            if alert in strings.ALERT_ALIASES:
-                alert = strings.ALERT_ALIASES[alert]
-            if alert in strings.ALERTS:
-                alert_column = f'{strings.ALERT_COLUMNS[alert]}_message'
-                update_alerts[alert_column] = message
-                updated_alerts.append(alert)
-            else:
-                ignored_alerts.append(alert)
+            alert_column = f'{strings.ALERT_COLUMNS[alert]}_message'
+            update_alerts[alert_column] = message if message != '' else strings.DEFAULT_MESSAGES[alert]
+            updated_alerts.append(alert)
 
         message_result = ''
         if updated_alerts:
             await database.update_guild(ctx, **update_alerts)
-            message_updated_alerts = 'Udated the message for the following alerts:'
+            message_updated_alerts = 'Updated the message for the following alerts:'
             for alert in updated_alerts:
                 message_updated_alerts = f'{message_updated_alerts}\n{emojis.BP} `{alert}`'
             message_result = message_updated_alerts
-        if ignored_alerts:
-            message_ignored_alerts = 'Could not find alerts with the following names:'
-            for ignored_alert in ignored_alerts:
-                message_ignored_alerts = f'{message_ignored_alerts}\n{emojis.BP} `{ignored_alert}`'
-            message_result = f'{message_result}\n\n{message_ignored_alerts}'.strip()
 
-        if message_result == '': message_result = message_syntax
         await ctx.reply(message_result, mention_author=False)
+
+
+
+
 
     @commands.command(name='flex-channel', aliases=('channel','flex',))
     @commands.has_permissions(manage_guild=True)

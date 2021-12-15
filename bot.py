@@ -12,7 +12,8 @@ intents.guilds = True   # for on_guild_join() and bot.guilds
 intents.messages = True   # for literally everything the bot does
 
 
-bot = commands.Bot(command_prefix=database.get_prefix_all, help_command=None, case_insensitive=True, intents=intents)
+bot = commands.Bot(command_prefix=database.get_prefix_all, help_command=None, case_insensitive=True,
+                   intents=intents, slash_commands=True, slash_command_guilds=[730115558766411857,])
 
 
 EXTENSIONS = [
