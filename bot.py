@@ -20,7 +20,8 @@ EXTENSIONS = [
     'cogs.dev',
     'cogs.events',
     'cogs.main',
-    'cogs.settings'
+    'cogs.settings',
+    'cogs.virtual_fisher'
 ]
 if __name__ == '__main__':
     for extension in EXTENSIONS:
