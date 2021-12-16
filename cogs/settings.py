@@ -1,10 +1,10 @@
 # settings.py
 """Contains settings commands"""
 
-import asyncio
-from typing import Literal, Optional
-
 import discord
+from discord.commands import slash_command
+from discord.enums import SlashCommandOptionType
+from discord.commands import Option, SlashCommandGroup
 from discord.ext import commands
 
 import database
@@ -15,6 +15,29 @@ class SettingsCog(commands.Cog):
     """Cog user and guild settings commands"""
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+
+    setting = SlashCommandGroup(
+        "set",
+        "Various settings",
+    )
+
+    setting_event = setting.create_subgroup(
+        "event", "Event settings"
+    )
+
+    setting_autoflex = setting.create_subgroup(
+        "auto-flex", "Auto-flex settings"
+    )
+
+    enable = SlashCommandGroup(
+        "enable",
+        "Enable alerts",
+    )
+
+    disable = SlashCommandGroup(
+        "disable",
+        "Disable alerts",
+    )
 
     # Commands
     @commands.command(aliases=('setprefix',))
@@ -44,151 +67,106 @@ class SettingsCog(commands.Cog):
                 f'To change the prefix, use `{syntax}`'
             )
 
-    @commands.command()
+    @slash_command(name='settings')
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def settings(self, ctx: commands.Context) -> None:
-        """Returns current user progress settings"""
+    async def settings_command(self, ctx: discord.ApplicationContext) -> None:
+        """Shows the current settings"""
         embed = await embed_guild_settings(self.bot, ctx)
-        await ctx.send(embed=embed)
+        await ctx.respond(embed=embed)
 
-    @commands.command(aliases=('disable',))
+    @enable.command(name='alert')
     @commands.has_permissions(manage_guild=True)
     @commands.bot_has_permissions(send_messages=True, read_message_history=True)
-    async def enable(self, ctx: commands.Context, *args: str) -> None:
-        """Enables/disables alerts"""
-        prefix = ctx.prefix
-        syntax = f'{prefix}enable/disable <alert>'
-        alert_list = f'Available alerts:\n{emojis.BP} `all`'
-        for alert in strings.ALERTS:
-            alert_list = f'{alert_list}\n{emojis.BP} `{alert}`'
-        message_syntax = (
-            f'{strings.MSG_SYNTAX.format(syntax=syntax)}\n\n'
-            f'{alert_list}'
-        )
+    async def enable_alert(
+        self,
+        ctx: discord.ApplicationContext,
+        event: Option(str, 'Event the alert should be enabled for', choices=strings.ALERTS_ALL),
+    ) -> None:
+        """Enables alerts"""
 
-        if not args:
-            await ctx.reply(message_syntax, mention_author=False)
-            return
-
-        args = [arg.lower() for arg in args]
-        if args[0] == 'all':
-            args = strings.ALERTS
-        action = ctx.invoked_with.lower()
+        alerts = strings.ALERTS if event == 'all' else [event,]
         update_alerts = {}
-        updated_alerts, ignored_alerts = [], []
-        for alert in args:
-            if alert in strings.ALERT_ALIASES:
-                alert = strings.ALERT_ALIASES[alert]
-            if alert in strings.ALERTS:
-                alert_column = f'{strings.ALERT_COLUMNS[alert]}_enabled'
-                update_alerts[alert_column] = True if action == 'enable' else False
-                updated_alerts.append(alert)
-            else:
-                ignored_alerts.append(alert)
-
-        message_result = ''
-        if updated_alerts:
-            await database.update_guild(ctx, **update_alerts)
-            message_updated_alerts = f'{action.capitalize()}d the following alerts:'
-            for alert in updated_alerts:
-                message_updated_alerts = f'{message_updated_alerts}\n{emojis.BP} `{alert}`'
-            message_result = message_updated_alerts
-        if ignored_alerts:
-            message_ignored_alerts = 'Could not find alerts with the following names:'
-            for ignored_alert in ignored_alerts:
-                message_ignored_alerts = f'{message_ignored_alerts}\n{emojis.BP} `{ignored_alert}`'
-            message_result = f'{message_result}\n\n{message_ignored_alerts}'.strip()
-
-        if message_result == '': message_result = message_syntax
-        await ctx.reply(message_result, mention_author=False)
-
-    @commands.command(name='event-role', aliases=('role',))
-    @commands.has_permissions(manage_guild=True)
-    @commands.bot_has_permissions(send_messages=True, read_message_history=True)
-    async def event_role(self, ctx: commands.Context, *args: str) -> None:
-        """Sets/resets event ping roles"""
-        prefix = ctx.prefix
-        syntax = f'{prefix}event-role <event> <@role>'
-        alert_list = f'Available alerts:\n{emojis.BP} `all`'
-        for alert in strings.ALERTS:
-            alert_list = f'{alert_list}\n{emojis.BP} `{alert}`'
-        message_syntax = (
-            f'{strings.MSG_SYNTAX.format(syntax=syntax)}\n\n'
-            f'{alert_list}'
-        )
-
-        if not args:
-            await ctx.reply(f'This command updates the pinged role when an event occurs.\n{message_syntax}', mention_author=False)
-            return
-        if not len(args) == 2:
-            await ctx.reply(message_syntax, mention_author=False)
-            return
-
-        args = [arg.lower() for arg in args]
-        arg_alert, arg_role = args
-        if arg_role == '@everyone':
-            role_id = ctx.guild.id
-        elif arg_role == '@here':
-            role_id = 0
-        else:
-            role_id = arg_role.replace('<@&','').replace('>','')
-        try:
-            role_id = int(role_id)
-        except:
-            await ctx.reply(f'Invalid role.\n{message_syntax}', mention_author=False)
-            return
-        if role_id not in (0, ctx.guild.id):
-            role = ctx.guild.get_role(role_id)
-            if role is None:
-                await ctx.reply(f'Invalid role.\n{message_syntax}', mention_author=False)
-                return
-        alerts = strings.ROLES_MESSAGES if arg_alert == 'all' else [arg_alert,]
-
-        update_alerts = {}
-        ignored_alerts, updated_alerts = [], []
+        updated_alerts = []
         for alert in alerts:
-            if alert in strings.ALERT_ALIASES:
-                alert = strings.ALERT_ALIASES[alert]
-            if alert in strings.ALERTS:
-                alert_column = f'{strings.ALERT_COLUMNS[alert]}_role_id'
-                update_alerts[alert_column] = role_id
-                updated_alerts.append(alert)
-            else:
-                ignored_alerts.append(alert)
+            alert_column = f'{strings.ALERT_COLUMNS[alert]}_enabled'
+            update_alerts[alert_column] = True
+            updated_alerts.append(alert)
 
         message_result = ''
-        if updated_alerts:
-            await database.update_guild(ctx, **update_alerts)
-            message_updated_alerts = 'Updated the role for the following alerts:'
-            for alert in updated_alerts:
-                message_updated_alerts = f'{message_updated_alerts}\n{emojis.BP} `{alert}`'
-            message_result = message_updated_alerts
-        if ignored_alerts:
-            message_ignored_alerts = 'Could not find alerts with the following names:'
-            for ignored_alert in ignored_alerts:
-                message_ignored_alerts = f'{message_ignored_alerts}\n{emojis.BP} `{ignored_alert}`'
-            message_result = f'{message_result}\n\n{message_ignored_alerts}'.strip()
+        await database.update_guild(ctx, **update_alerts)
+        message_updated_alerts = 'Enabled the following alerts:'
+        for alert in updated_alerts:
+            message_updated_alerts = f'{message_updated_alerts}\n{emojis.BP} `{alert}`'
+        message_result = message_updated_alerts
 
-        if message_result == '': message_result = message_syntax
-        await ctx.reply(message_result, mention_author=False)
+        await ctx.respond(message_result)
 
-    @commands.command(name='event-message', aliases=('message',))
+    @disable.command(name='alert')
     @commands.has_permissions(manage_guild=True)
     @commands.bot_has_permissions(send_messages=True, read_message_history=True)
-    async def event_message(self, ctx: commands.Context,
-                            event: Literal[
-                                'all',
-                                'arena',
-                                'catch',
-                                'chop',
-                                'fish',
-                                'legendary-boss',
-                                'miniboss',
-                                'rumble-royale',
-                                'summon'] = commands.Option(description='Event the message is for'),
-                            message: Optional[str] = commands.Option(description='Message to send. If omitted, the message will reset.')
-                            ) -> None:
-        """Sets/resets event messages"""
+    async def disable_alert(
+        self,
+        ctx: discord.ApplicationContext,
+        event: Option(str, 'Event the alert should be disabled for', choices=strings.ALERTS_ALL),
+    ) -> None:
+        """Disables alerts"""
+
+        alerts = strings.ALERTS if event == 'all' else [event,]
+        update_alerts = {}
+        updated_alerts = []
+        for alert in alerts:
+            alert_column = f'{strings.ALERT_COLUMNS[alert]}_enabled'
+            update_alerts[alert_column] = False
+            updated_alerts.append(alert)
+
+        message_result = ''
+        await database.update_guild(ctx, **update_alerts)
+        message_updated_alerts = 'Disabled the following alerts:'
+        for alert in updated_alerts:
+            message_updated_alerts = f'{message_updated_alerts}\n{emojis.BP} `{alert}`'
+        message_result = message_updated_alerts
+
+        await ctx.respond(message_result)
+
+    @setting_event.command(name='role')
+    @commands.has_permissions(manage_guild=True)
+    @commands.bot_has_permissions(send_messages=True, read_message_history=True)
+    async def set_event_role(
+        self,
+        ctx: discord.ApplicationContext,
+        event: Option(str, 'Event the role is pinged for', choices=strings.ROLES_MESSAGES_ALL),
+        role: Option(SlashCommandOptionType(8), 'Role to ping. If omitted, Tatl will ping @here.', required=False, default=None)
+    ) -> None:
+        """Sets the role that is pinged when an event is detected"""
+
+        alerts = strings.ROLES_MESSAGES if event == 'all' else [event,]
+        update_alerts = {}
+        updated_alerts = []
+        for alert in alerts:
+            alert_column = f'{strings.ALERT_COLUMNS[alert]}_role_id'
+            update_alerts[alert_column] = 0 if role is None else role.id
+            updated_alerts.append(alert)
+
+        message_result = ''
+        await database.update_guild(ctx, **update_alerts)
+        role_name = f'@{role.name}' if role is not None else '@here'
+        message_updated_alerts = f'Updated the role to `{role_name}` for the following alerts:'
+        for alert in updated_alerts:
+            message_updated_alerts = f'{message_updated_alerts}\n{emojis.BP} `{alert}`'
+        message_result = message_updated_alerts
+
+        await ctx.respond(message_result)
+
+    @setting_event.command(name='message')
+    @commands.has_permissions(manage_guild=True)
+    @commands.bot_has_permissions(send_messages=True, read_message_history=True)
+    async def set_event_message(
+        self,
+        ctx: discord.ApplicationContext,
+        event: Option(str, 'Event the message is for', choices=strings.ROLES_MESSAGES_ALL),
+        message: Option(str, 'Message to send. If omitted, message will reset to default.', required=False, default=None)
+    ) -> None:
+        """Set the message that is sent when an event is detected"""
 
         alerts = strings.ROLES_MESSAGES if event == 'all' else [event,]
 
@@ -200,60 +178,26 @@ class SettingsCog(commands.Cog):
             updated_alerts.append(alert)
 
         message_result = ''
-        if updated_alerts:
-            await database.update_guild(ctx, **update_alerts)
-            message_updated_alerts = 'Updated the message for the following alerts:'
-            for alert in updated_alerts:
-                message_updated_alerts = f'{message_updated_alerts}\n{emojis.BP} `{alert}`'
-            message_result = message_updated_alerts
+        await database.update_guild(ctx, **update_alerts)
+        message_updated_alerts = 'Updated the message for the following alerts:'
+        for alert in updated_alerts:
+            message_updated_alerts = f'{message_updated_alerts}\n{emojis.BP} `{alert}`'
+        message_result = message_updated_alerts
 
-        await ctx.reply(message_result, mention_author=False)
+        await ctx.respond(message_result)
 
-
-
-
-
-    @commands.command(name='flex-channel', aliases=('channel','flex',))
+    @setting_autoflex.command(name='channel')
     @commands.has_permissions(manage_guild=True)
     @commands.bot_has_permissions(send_messages=True, read_message_history=True)
-    async def flex_channel(self, ctx: commands.Context, *args: str) -> None:
-        """Sets/resets the auto flex channel"""
-        def check(message):
-            return message.author == ctx.author and message.channel == ctx.channel
-
-        prefix = ctx.prefix
-        syntax = f'{prefix}flex-channel <#channel>'
-        message_syntax = (
-            f'{strings.MSG_SYNTAX.format(syntax=syntax)}'
-        )
-
-        if args:
-            channel_id = args[0].replace('<#','').replace('>','')
-            try:
-                channel_id = int(channel_id)
-            except:
-                await ctx.reply(f'Invalid channel.\n{message_syntax}', mention_author=False)
-                return
-            channel = ctx.guild.get_channel(channel_id)
-            if channel is None:
-                await ctx.reply(f'Invalid channel.\n{message_syntax}', mention_author=False)
-                return
-
-        if not args:
-            await ctx.reply(f'**{ctx.author.name}**, do you want to set the current channel as the auto flex channel? [`yes/no`]', mention_author=False)
-            try:
-                answer = await self.bot.wait_for('message', check=check, timeout=60)
-            except asyncio.TimeoutError as error:
-                await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
-                return
-            if answer.content.lower() in ('yes','y'):
-                channel = ctx.channel
-            else:
-                await ctx.send('Aborted.')
-                return
+    async def set_autoflex_channel(
+        self,
+        ctx: discord.ApplicationContext,
+        channel: Option(discord.TextChannel, 'Channel the auto-flex messages are sent to')
+    ) -> None:
+        """Sets the auto-flex channel"""
 
         await database.update_guild(ctx, auto_flex_channel_id=channel.id)
-        await ctx.send(f'Changed the auto flex channel to `{channel.name}`')
+        await ctx.respond(f'Changed the auto-flex channel to `{channel.name}`')
 
 
 # Initialization

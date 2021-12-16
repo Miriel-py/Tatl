@@ -142,7 +142,7 @@ async def get_guild(ctx_or_guild: Union[commands.Context, discord.Guild]) -> Gui
     function_name = 'get_guild'
     sql = 'SELECT * FROM settings_guild where guild_id=?'
     database_error = '{error}\nFunction: {function}'
-    if isinstance(ctx_or_guild, commands.Context):
+    if isinstance(ctx_or_guild, (discord.ApplicationContext, commands.Context)):
         ctx = ctx_or_guild
         guild_id = ctx.guild.id
     else:
@@ -177,51 +177,51 @@ async def get_guild(ctx_or_guild: Union[commands.Context, discord.Guild]) -> Gui
         arena_settings = GuildEvent(
             name = 'Arena',
             enabled = bool(record['arena_enabled']),
-            message = record['arena_message'] if record['arena_message'] is not None else strings.DEFAULT_MSG_ARENA,
+            message = record['arena_message'] if record['arena_message'] is not None else strings.DEFAULT_MESSAGES['arena'],
             role_id = record['arena_role_id'],
         )
         boss_settings = GuildEvent(
             name = 'Legendary Boss',
             enabled = bool(record['boss_enabled']),
-            message = record['boss_message'] if record['boss_message'] is not None else strings.DEFAULT_MSG_BOSS,
+            message = record['boss_message'] if record['boss_message'] is not None else strings.DEFAULT_MESSAGES['legendary-boss'],
             role_id = record['boss_role_id'],
         )
         catch_settings = GuildEvent(
             name = 'Catch (Coin Rain)',
             enabled = bool(record['catch_enabled']),
-            message = record['catch_message'] if record['catch_message'] is not None else strings.DEFAULT_MSG_CATCH,
+            message = record['catch_message'] if record['catch_message'] is not None else strings.DEFAULT_MESSAGES['catch'],
             role_id = record['catch_role_id'],
         )
         chop_settings = GuildEvent(
             name = 'Chop (Epic Tree)',
             enabled = bool(record['chop_enabled']),
-            message = record['chop_message'] if record['chop_message'] is not None else strings.DEFAULT_MSG_CHOP,
+            message = record['chop_message'] if record['chop_message'] is not None else strings.DEFAULT_MESSAGES['chop'],
             role_id = record['chop_role_id'],
         )
         fish_settings = GuildEvent(
             name = 'Fish (Megalodon)',
             enabled = bool(record['fish_enabled']),
-            message = record['fish_message'] if record['fish_message'] is not None else strings.DEFAULT_MSG_FISH,
+            message = record['fish_message'] if record['fish_message'] is not None else strings.DEFAULT_MESSAGES['fish'],
             role_id = record['fish_role_id'],
         )
         miniboss_settings = GuildEvent(
             name = 'Miniboss',
             enabled = bool(record['miniboss_enabled']),
             message = (
-                record['miniboss_message'] if record['miniboss_message'] is not None else strings.DEFAULT_MSG_MINIBOSS
+                record['miniboss_message'] if record['miniboss_message'] is not None else strings.DEFAULT_MESSAGES['miniboss']
             ),
             role_id = record['miniboss_role_id'],
         )
         rumble_settings = GuildEvent(
             name = 'Rumble Royale',
             enabled = bool(record['rumble_enabled']),
-            message = record['rumble_message'] if record['rumble_message'] is not None else strings.DEFAULT_MSG_RUMBLE,
+            message = record['rumble_message'] if record['rumble_message'] is not None else strings.DEFAULT_MESSAGES['rumble-royale'],
             role_id = record['rumble_role_id'],
         )
         summon_settings = GuildEvent(
             name = 'Lootbox Summoning',
             enabled = bool(record['summon_enabled']),
-            message = record['summon_message'] if record['summon_message'] is not None else strings.DEFAULT_MSG_SUMMON,
+            message = record['summon_message'] if record['summon_message'] is not None else strings.DEFAULT_MESSAGES['summon'],
             role_id = record['summon_role_id'],
         )
         guild_settings = Guild(

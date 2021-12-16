@@ -4,6 +4,7 @@
 from datetime import datetime
 
 import discord
+from discord.commands.commands import slash_command
 from discord.ext import commands, tasks
 
 import database
@@ -16,19 +17,20 @@ class MainCog(commands.Cog):
         self.bot = bot
 
     # Commands
-    @commands.command(name='help',aliases=('h',))
+    @slash_command(name='help')
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def main_help(self, ctx: commands.Context) -> None:
         """Main help command"""
         embed = await embed_main_help(ctx)
-        await ctx.reply(embed=embed, mention_author=False)
+        await ctx.respond(embed=embed)
 
-    @commands.command(aliases=('statistic','statistics,','devstat','ping','devstats','info','stats'))
+    @slash_command()
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def about(self, ctx: commands.Context):
-        """Shows some bot info"""
+        """Shows some info about Tatl"""
         start_time = datetime.utcnow()
-        message = await ctx.send('Testing API latency...')
+        await ctx.respond('Testing API latency...')
+        message = await ctx.interaction.original_message()
         end_time = datetime.utcnow()
         api_latency = end_time - start_time
         embed = await embed_about(self.bot, ctx, api_latency)
@@ -36,21 +38,21 @@ class MainCog(commands.Cog):
 
      # Events
     @commands.Cog.listener()
-    async def on_command_error(self, ctx: commands.Context, error: Exception) -> None:
+    async def on_application_command_error(self, ctx: commands.Context, error: Exception) -> None:
         """Runs when an error occurs and handles them accordingly.
         Interesting errors get written to the database for further review.
         """
         async def send_error() -> None:
             """Sends error message as embed"""
             embed = discord.Embed(title='An error occured')
-            embed.add_field(name='Command', value=f'`{ctx.command.qualified_name}`', inline=False)
+            embed.add_field(name='Command', value=f'`{ctx.command.name}`', inline=False)
             embed.add_field(name='Error', value=f'```py\n{error}\n```', inline=False)
-            await ctx.send(embed=embed)
+            await ctx.respond(embed=embed)
 
         if isinstance(error, (commands.CommandNotFound, commands.NotOwner)):
             return
         elif isinstance(error, commands.DisabledCommand):
-            await ctx.send(f'Command `{ctx.command.qualified_name}` is temporarily disabled.')
+            await ctx.respond(f'Command `{ctx.command.qualified_name}` is temporarily disabled.')
         elif isinstance(error, (commands.MissingPermissions, commands.MissingRequiredArgument,
                                 commands.TooManyArguments, commands.BadArgument)):
             await send_error()
@@ -58,12 +60,13 @@ class MainCog(commands.Cog):
             if 'send_messages' in error.missing_perms:
                 return
             if 'embed_links' in error.missing_perms:
-                await ctx.send(error)
+                await ctx.respond(error)
             else:
                 await send_error()
         else:
             await database.log_error(error, ctx)
             await send_error()
+
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
@@ -83,9 +86,7 @@ class MainCog(commands.Cog):
             welcome_message = (
                 f'Hey! **{guild.name}**! I\'m here to alert you when an Epic RPG event pops up!\n'
                 f'I\'m also trained in giving you snarky auto flex messages.\n\n'
-                f'Note that all alerts are off by default. Use `{prefix}help` to get started.\n'
-                f'If you don\'t like this prefix, use `{prefix}prefix` to change it.\n\n'
-                f'Tip: If you ever forget the prefix, simply ping me with a command.'
+                f'Note that all alerts are off by default. Use `/help` to get started.'
             )
             await guild.system_channel.send(welcome_message)
         except:
@@ -100,16 +101,12 @@ def setup(bot):
 # --- Embeds ---
 async def embed_main_help(ctx: commands.Context) -> discord.Embed:
     """Main menu embed"""
-    prefix = ctx.prefix
     alert_settings = (
-        f'{emojis.BP} `{prefix}settings` : Show the current settings\n'
-        f'{emojis.BP} `{prefix}enable` / `disable` : Enable/disable alerts\n'
-        f'{emojis.BP} `{prefix}event-role` : Set an event ping role\n'
-        f'{emojis.BP} `{prefix}event-message` : Set an event message\n'
-        f'{emojis.BP} `{prefix}flex-channel` : Set the auto flex channel'
-    )
-    prefix_settings = (
-        f'{emojis.BP} `{prefix}prefix` : Check/set the bot prefix\n'
+        f'{emojis.BP} `/settings` : Show the current settings\n'
+        f'{emojis.BP} `/toggle alert` : Enable/disable alerts\n'
+        f'{emojis.BP} `/set event-role` : Set an event ping role\n'
+        f'{emojis.BP} `/set event-message` : Set an event message\n'
+        f'{emojis.BP} `/set flex-channel` : Set the auto flex channel'
     )
 
     embed = discord.Embed(
@@ -118,7 +115,6 @@ async def embed_main_help(ctx: commands.Context) -> discord.Embed:
         description = 'Ding ding ding!'
     )
     embed.add_field(name='ALERTS', value=alert_settings, inline=False)
-    embed.add_field(name='PREFIX', value=prefix_settings, inline=False)
 
     return embed
 
