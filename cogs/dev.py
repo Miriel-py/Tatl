@@ -19,6 +19,7 @@ class DevCog(commands.Cog):
     dev = SlashCommandGroup(
         "dev",
         "Development commands",
+        guild_ids=settings.DEV_GUILDS,
         permissions=[
             Permission(
                 "owner", 2, True
@@ -27,13 +28,13 @@ class DevCog(commands.Cog):
     )
 
     # Commands
-    @dev.command(guild_ids=settings.DEV_GUILDS)
+    @dev.command()
     async def reload(
         self,
         ctx: discord.ApplicationContext,
         modules: Option(str, 'Cogs or modules to reload'),
     ) -> None:
-        """Reloads cogs cogs or modules"""
+        """Reloads cogs or modules"""
         modules = modules.split(' ')
         actions = []
         for module in modules:
@@ -62,7 +63,7 @@ class DevCog(commands.Cog):
             message = f'{message}\n{action}'
         await ctx.respond(f'```diff\n{message}\n```')
 
-    @dev.command(guild_ids=settings.DEV_GUILDS)
+    @dev.command()
     async def shutdown(self, ctx: discord.ApplicationContext):
         """Shuts down the bot"""
         view = views.ConfirmCancelView(ctx)

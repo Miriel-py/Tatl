@@ -14,12 +14,7 @@ BOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_FILE = os.path.join(BOT_DIR, 'database/tatl_db.db')
 LOG_FILE = os.path.join(BOT_DIR, 'logs/discord.log')
 
-DONOR_COOLDOWNS = (1, 0.9, 0.8, 0.65,)
-
-DEFAULT_PREFIX = 'tatl '
-
 DEV_GUILDS = [730115558766411857,]
-DEBUG_GUILDS = DEV_GUILDS if DEBUG_MODE == 'ON' else []
 
 EPIC_RPG_ID = 555955826880413696
 RUMBLE_ROYALE_ID = 693167035068317736
@@ -29,6 +24,4 @@ VIRTUAL_FISHER_ID = 574652751745777665
 EMBED_COLOR = 0xFFE600
 
 # Set default footer
-FOOTER = 'Ding ding ding!'
-
-# Error log file
+DEFAULT_FOOTER = 'Ding ding ding!'

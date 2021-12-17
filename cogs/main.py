@@ -4,11 +4,11 @@
 from datetime import datetime
 
 import discord
-from discord.commands.commands import slash_command
+from discord.commands import slash_command
 from discord.ext import commands, tasks
 
 import database
-from resources import emojis, exceptions, logs, settings
+from resources import emojis, logs, settings
 
 
 class MainCog(commands.Cog):
@@ -80,11 +80,9 @@ class MainCog(commands.Cog):
     async def on_guild_join(self, guild: discord.Guild) -> None:
         """Fires when bot joins a guild. Sends a welcome message to the system channel."""
         try:
-            guild_settings: database.Guild = await database.get_guild(guild)
-            prefix = guild_settings.prefix
             welcome_message = (
                 f'Hey! **{guild.name}**! I\'m here to alert you when an Epic RPG event pops up!\n'
-                f'I\'m also trained in giving you snarky auto flex messages.\n\n'
+                f'I\'m also trained in giving you snarky auto-flex messages.\n\n'
                 f'Note that all alerts are off by default. Use `/help` to get started.'
             )
             await guild.system_channel.send(welcome_message)
