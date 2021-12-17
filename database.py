@@ -2,9 +2,8 @@
 """Access to the database"""
 
 from datetime import datetime
-import itertools
 import sqlite3
-from typing import List, NamedTuple, Optional, Tuple, Union
+from typing import NamedTuple, Optional, Union
 
 import discord
 from discord.ext import commands
@@ -29,7 +28,6 @@ class GuildEvent(NamedTuple):
 
 class Guild(NamedTuple):
     id: int
-    prefix: str
     auto_flex_enabled: bool
     auto_flex_channel_id: int
     arena: GuildEvent
@@ -42,18 +40,7 @@ class Guild(NamedTuple):
     summon: GuildEvent
 
 
-async def mixed_case(*args: str) -> List[str]:
-    """Generates mixed case prefixes"""
-    mixed_prefixes = []
-    for string in args:
-        all_prefixes = map(''.join, itertools.product(*((c.upper(), c.lower()) for c in string)))
-        for prefix in list(all_prefixes):
-            mixed_prefixes.append(prefix)
-
-    return mixed_prefixes
-
-
-async def log_error(error: Union[Exception, str], ctx: Optional[commands.Context] = None):
+async def log_error(error: Union[Exception, str], ctx: Optional[discord.ApplicationContext] = None):
     """Logs an error to the database and the logfile
 
     Arguments
@@ -68,16 +55,17 @@ async def log_error(error: Union[Exception, str], ctx: Optional[commands.Context
     """
     table = 'errors'
     function_name = 'log_error'
-    sql = 'INSERT INTO errors VALUES (?, ?, ?)'
+    sql = 'INSERT INTO errors VALUES (?, ?, ?, ?)'
     if ctx is not None:
-        timestamp = ctx.message.created_at
-        user_input = ctx.message.content
+        command_name = f'{ctx.command.full_parent_name} {ctx.command.name}'.strip()
+        timestamp = ctx.author.created_at
+        user_options = str(ctx.interaction.data['options'])
     else:
         timestamp = datetime.utcnow()
-        user_input = 'N/A'
+        user_options = 'N/A'
     try:
         cur = ERG_DB.cursor()
-        cur.execute(sql, (timestamp, user_input, str(error)))
+        cur.execute(sql, (timestamp, command_name, user_options, str(error)))
     except sqlite3.Error as error:
         logs.logger.error(
             INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql),
@@ -87,44 +75,7 @@ async def log_error(error: Union[Exception, str], ctx: Optional[commands.Context
 
 
 # --- Database: Get Data ---
-async def get_prefix_all(bot: commands.Bot, ctx: commands.Context) -> Tuple:
-    """Gets all prefixes. If no prefix is found, a record for the guild is created with the
-    default prefix.
-
-    Returns
-    -------
-    A tuple with the current server prefix and the pingable bot
-
-    Raises
-    ------
-    sqlite3.Error if something happened within the database.  Also logs this error to the database.
-    """
-    table = 'settings_guild'
-    function_name = 'get_all_prefixes'
-    sql = 'SELECT prefix FROM settings_guild where guild_id=?'
-    guild_id = ctx.guild.id
-    try:
-        cur = ERG_DB.cursor()
-        cur.execute(sql, (guild_id,))
-        record = cur.fetchone()
-        if record:
-            prefix_db = record[0].replace('"','')
-            prefixes = await mixed_case(prefix_db)
-        else:
-            sql = 'INSERT INTO settings_guild (guild_id, prefix) VALUES (?, ?)'
-            cur.execute(sql, (guild_id, settings.DEFAULT_PREFIX,))
-            prefixes = await mixed_case(settings.DEFAULT_PREFIX)
-    except sqlite3.Error as error:
-        await log_error(
-            INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql),
-            ctx
-        )
-        raise
-
-    return commands.when_mentioned_or(*prefixes)(bot, ctx)
-
-
-async def get_guild(ctx_or_guild: Union[commands.Context, discord.Guild]) -> Guild:
+async def get_guild(ctx_or_guild: Union[discord.ApplicationContext, discord.Guild]) -> Guild:
     """Gets all guild settings.
 
     Returns
@@ -226,7 +177,6 @@ async def get_guild(ctx_or_guild: Union[commands.Context, discord.Guild]) -> Gui
         )
         guild_settings = Guild(
             id = record['guild_id'],
-            prefix = record['prefix'],
             auto_flex_enabled = bool(record['auto_flex_enabled']),
             auto_flex_channel_id = record['auto_flex_channel_id'],
             arena = arena_settings,
@@ -250,14 +200,13 @@ async def get_guild(ctx_or_guild: Union[commands.Context, discord.Guild]) -> Gui
 
 
 # --- Database: Write Data ---
-async def update_guild(ctx: commands.Context, **kwargs) -> None:
+async def update_guild(ctx: discord.ApplicationContext, **kwargs) -> None:
     """Updates guild settings.
 
     Arguments
     ---------
     ctx: Context.
     kwargs (column=value):
-        prefix: str
         auto_flex_enabled: bool
         auto_flex_channel_id: int
         arena_enabled: bool

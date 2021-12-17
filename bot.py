@@ -8,12 +8,12 @@ import database
 from resources import settings
 
 intents = discord.Intents.none()
-intents.guilds = True   # for on_guild_join() and bot.guilds
+intents.guilds = True   # for on_guild_join() and all guild objects
 intents.messages = True   # for literally everything the bot does
 
 
-bot = commands.Bot(command_prefix=database.get_prefix_all, help_command=None, case_insensitive=True,
-                   intents=intents, debug_guilds=settings.DEBUG_GUILDS, owner_id=619879176316649482)
+bot = commands.Bot(help_command=None, case_insensitive=True, intents=intents,
+                   debug_guilds=settings.DEBUG_GUILDS, owner_id=619879176316649482)
 
 
 EXTENSIONS = [

@@ -21,8 +21,8 @@ class SettingsCog(commands.Cog):
         "Various settings",
     )
 
-    setting_event = setting.create_subgroup(
-        "event", "Event settings"
+    setting_alert = setting.create_subgroup(
+        "alert", "Event settings"
     )
 
     setting_autoflex = setting.create_subgroup(
@@ -39,39 +39,11 @@ class SettingsCog(commands.Cog):
         "Disable alerts",
     )
 
-    # Commands
-    @commands.command(aliases=('setprefix',))
-    @commands.has_permissions(manage_guild=True)
-    @commands.bot_has_permissions(send_messages=True)
-    async def prefix(self, ctx: commands.Context, *args: str) -> None:
-        """Gets/sets new server prefix"""
-        guild_settings: database.Guild = await database.get_guild(ctx)
-        prefix = guild_settings.prefix
-        syntax = f'{prefix}prefix <prefix>'
-        message_syntax = (
-            f'{strings.MSG_SYNTAX.format(syntax=syntax)}\n\n'
-            f'Tip: If you want to include a space, use quotation marks.\n'
-            f'Examples:\n• `{prefix}prefix "tatl "`\n• `{prefix}setprefix &`'
-        )
-        if args:
-            if len(args) > 1:
-                await ctx.send(message_syntax)
-                return
-            (new_prefix,) = args
-            await database.update_guild(ctx, prefix=new_prefix)
-            guild_settings: database.Guild = await database.get_guild(ctx)
-            await ctx.send(f'Prefix changed to `{guild_settings.prefix}`')
-        else:
-            await ctx.send(
-                f'The prefix for this server is `{guild_settings.prefix}`\n'
-                f'To change the prefix, use `{syntax}`'
-            )
-
     @slash_command(name='settings')
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def settings_command(self, ctx: discord.ApplicationContext) -> None:
         """Shows the current settings"""
-        embed = await embed_guild_settings(self.bot, ctx)
+        embed = await embed_guild_settings(ctx)
         await ctx.respond(embed=embed)
 
     @enable.command(name='alert')
@@ -128,7 +100,7 @@ class SettingsCog(commands.Cog):
 
         await ctx.respond(message_result)
 
-    @setting_event.command(name='role')
+    @setting_alert.command(name='role')
     @commands.has_permissions(manage_guild=True)
     @commands.bot_has_permissions(send_messages=True, read_message_history=True)
     async def set_event_role(
@@ -157,7 +129,7 @@ class SettingsCog(commands.Cog):
 
         await ctx.respond(message_result)
 
-    @setting_event.command(name='message')
+    @setting_alert.command(name='message')
     @commands.has_permissions(manage_guild=True)
     @commands.bot_has_permissions(send_messages=True, read_message_history=True)
     async def set_event_message(
@@ -206,7 +178,7 @@ def setup(bot):
 
 
 # --- Embeds ---
-async def embed_guild_settings(bot: commands.Bot, ctx: commands.Context) -> discord.Embed:
+async def embed_guild_settings(ctx: discord.ApplicationContext) -> discord.Embed:
     """Settings embed"""
     guild_settings: database.Guild = await database.get_guild(ctx)
 

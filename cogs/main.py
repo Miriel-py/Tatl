@@ -19,48 +19,49 @@ class MainCog(commands.Cog):
     # Commands
     @slash_command(name='help')
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def main_help(self, ctx: commands.Context) -> None:
+    async def main_help(self, ctx: discord.ApplicationContext) -> None:
         """Main help command"""
         embed = await embed_main_help(ctx)
         await ctx.respond(embed=embed)
 
     @slash_command()
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def about(self, ctx: commands.Context):
+    async def about(self, ctx: discord.ApplicationContext):
         """Shows some info about Tatl"""
         start_time = datetime.utcnow()
         await ctx.respond('Testing API latency...')
-        message = await ctx.interaction.original_message()
         end_time = datetime.utcnow()
         api_latency = end_time - start_time
         embed = await embed_about(self.bot, ctx, api_latency)
-        await message.edit(content=None, embed=embed)
+        await ctx.interaction.edit_original_message(content=None, embed=embed)
 
      # Events
     @commands.Cog.listener()
-    async def on_application_command_error(self, ctx: commands.Context, error: Exception) -> None:
+    async def on_application_command_error(self, ctx: discord.ApplicationContext, error: Exception) -> None:
         """Runs when an error occurs and handles them accordingly.
         Interesting errors get written to the database for further review.
         """
         async def send_error() -> None:
             """Sends error message as embed"""
             embed = discord.Embed(title='An error occured')
-            embed.add_field(name='Command', value=f'`{ctx.command.name}`', inline=False)
+            command_name = f'{ctx.command.full_parent_name} {ctx.command.name}'.strip()
+            embed.add_field(name='Command', value=f'`{command_name}`', inline=False)
             embed.add_field(name='Error', value=f'```py\n{error}\n```', inline=False)
-            await ctx.respond(embed=embed)
+            await ctx.respond(embed=embed, ephemeral=True)
 
+        error = getattr(error, 'original', error)
         if isinstance(error, (commands.CommandNotFound, commands.NotOwner)):
             return
         elif isinstance(error, commands.DisabledCommand):
-            await ctx.respond(f'Command `{ctx.command.qualified_name}` is temporarily disabled.')
+            await ctx.respond(f'Command `{ctx.command.qualified_name}` is temporarily disabled.', ephemeral=True)
         elif isinstance(error, (commands.MissingPermissions, commands.MissingRequiredArgument,
                                 commands.TooManyArguments, commands.BadArgument)):
             await send_error()
         elif isinstance(error, commands.BotMissingPermissions):
-            if 'send_messages' in error.missing_perms:
+            if 'send_messages' in error.missing_permissions:
                 return
             if 'embed_links' in error.missing_perms:
-                await ctx.respond(error)
+                await ctx.respond(error, ephemeral=True)
             else:
                 await send_error()
         else:
@@ -99,14 +100,15 @@ def setup(bot):
 
 
 # --- Embeds ---
-async def embed_main_help(ctx: commands.Context) -> discord.Embed:
+async def embed_main_help(ctx: discord.ApplicationContext) -> discord.Embed:
     """Main menu embed"""
     alert_settings = (
         f'{emojis.BP} `/settings` : Show the current settings\n'
-        f'{emojis.BP} `/toggle alert` : Enable/disable alerts\n'
-        f'{emojis.BP} `/set event-role` : Set an event ping role\n'
-        f'{emojis.BP} `/set event-message` : Set an event message\n'
-        f'{emojis.BP} `/set flex-channel` : Set the auto flex channel'
+        f'{emojis.BP} `/enable alert` : Enable alerts\n'
+        f'{emojis.BP} `/disable alert` : Disable alerts\n'
+        f'{emojis.BP} `/set alert role` : Set an alert ping role\n'
+        f'{emojis.BP} `/set alert message` : Set an alert message\n'
+        f'{emojis.BP} `/set auto-flex channel` : Set the auto-flex channel'
     )
 
     embed = discord.Embed(
@@ -119,7 +121,7 @@ async def embed_main_help(ctx: commands.Context) -> discord.Embed:
     return embed
 
 
-async def embed_about(bot: commands.Bot, ctx: commands.Context, api_latency: datetime) -> discord.Embed:
+async def embed_about(bot: commands.Bot, ctx: discord.ApplicationContext, api_latency: datetime) -> discord.Embed:
     """Bot info embed"""
     general = (
         f'{emojis.BP} {len(bot.guilds):,} servers\n'
