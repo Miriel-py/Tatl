@@ -18,14 +18,12 @@ class MainCog(commands.Cog):
 
     # Commands
     @slash_command(name='help')
-    @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def main_help(self, ctx: discord.ApplicationContext) -> None:
         """Main help command"""
         embed = await embed_main_help(ctx)
         await ctx.respond(embed=embed)
 
     @slash_command()
-    @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def about(self, ctx: discord.ApplicationContext):
         """Shows some info about Tatl"""
         start_time = datetime.utcnow()

@@ -4,7 +4,6 @@
 import discord
 from discord.ext import commands
 
-import database
 from resources import settings
 
 intents = discord.Intents.none()

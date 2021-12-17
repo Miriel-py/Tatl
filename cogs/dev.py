@@ -8,7 +8,7 @@ import discord
 from discord.commands import SlashCommandGroup, Permission, Option
 from discord.ext import commands
 
-from resources import views
+from resources import settings, views
 
 
 class DevCog(commands.Cog):
@@ -27,8 +27,7 @@ class DevCog(commands.Cog):
     )
 
     # Commands
-    @dev.command()
-    @commands.bot_has_permissions(send_messages=True)
+    @dev.command(guild_ids=settings.DEV_GUILDS)
     async def reload(
         self,
         ctx: discord.ApplicationContext,
@@ -63,8 +62,7 @@ class DevCog(commands.Cog):
             message = f'{message}\n{action}'
         await ctx.respond(f'```diff\n{message}\n```')
 
-    @dev.command()
-    @commands.bot_has_permissions(send_messages=True)
+    @dev.command(guild_ids=settings.DEV_GUILDS)
     async def shutdown(self, ctx: discord.ApplicationContext):
         """Shuts down the bot"""
         view = views.ConfirmCancelView(ctx)

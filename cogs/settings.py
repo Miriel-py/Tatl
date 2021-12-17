@@ -40,7 +40,6 @@ class SettingsCog(commands.Cog):
     )
 
     @slash_command(name='settings')
-    @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def settings_command(self, ctx: discord.ApplicationContext) -> None:
         """Shows the current settings"""
         embed = await embed_guild_settings(ctx)
@@ -48,7 +47,7 @@ class SettingsCog(commands.Cog):
 
     @enable.command(name='alert')
     @commands.has_permissions(manage_guild=True)
-    @commands.bot_has_permissions(send_messages=True, read_message_history=True)
+    #@commands.bot_has_permissions(send_messages=True, read_message_history=True)
     async def enable_alert(
         self,
         ctx: discord.ApplicationContext,
@@ -75,7 +74,6 @@ class SettingsCog(commands.Cog):
 
     @disable.command(name='alert')
     @commands.has_permissions(manage_guild=True)
-    @commands.bot_has_permissions(send_messages=True, read_message_history=True)
     async def disable_alert(
         self,
         ctx: discord.ApplicationContext,
@@ -102,7 +100,6 @@ class SettingsCog(commands.Cog):
 
     @setting_alert.command(name='role')
     @commands.has_permissions(manage_guild=True)
-    @commands.bot_has_permissions(send_messages=True, read_message_history=True)
     async def set_event_role(
         self,
         ctx: discord.ApplicationContext,
@@ -131,7 +128,6 @@ class SettingsCog(commands.Cog):
 
     @setting_alert.command(name='message')
     @commands.has_permissions(manage_guild=True)
-    @commands.bot_has_permissions(send_messages=True, read_message_history=True)
     async def set_event_message(
         self,
         ctx: discord.ApplicationContext,
@@ -160,7 +156,6 @@ class SettingsCog(commands.Cog):
 
     @setting_autoflex.command(name='channel')
     @commands.has_permissions(manage_guild=True)
-    @commands.bot_has_permissions(send_messages=True, read_message_history=True)
     async def set_autoflex_channel(
         self,
         ctx: discord.ApplicationContext,
