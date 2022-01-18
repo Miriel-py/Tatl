@@ -54,15 +54,16 @@ class AutoFlexCog(commands.Cog):
             # Update current user TT
             if message.embeds:
                 embed = message.embeds[0]
-                if '\'s profile' in message_author.lower() and embed.fields:
-                    progress_field = embed.fields[0].value
+                search_strings = ['\'s profile', '\'s progress', '\'s time travel']
+                if any(string in message_author.lower() for string in search_strings) and embed.fields:
                     icon_url = embed.author.icon_url
                     user_id = user_name = user = None
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
                         try:
-                            user_name = re.search("^(.+?)'s profile", message_author).group(1)
+
+                            user_name = re.search("^(.+?)'s", message_author).group(1)
                             user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                         except Exception as error:
                             await message.add_reaction(emojis.WARNING)
@@ -80,11 +81,20 @@ class AutoFlexCog(commands.Cog):
                         await message.add_reaction(emojis.WARNING)
                         await database.log_error(f'User not found in profile message: {message}')
                         return
-                    try:
-                        current_tt = re.search('Time travels\*\*: (.+?)$', progress_field).group(1)
-                        current_tt = int(current_tt)
-                    except:
-                        current_tt = 0
+                    if 'time travel' in message_author.lower():
+                        progress_field = embed.description
+                        try:
+                            current_tt = re.search('Time travels\*\*: (.+?)\\n', progress_field).group(1)
+                            current_tt = int(current_tt)
+                        except:
+                            current_tt = 0
+                    else:
+                        progress_field = embed.fields[0].value
+                        try:
+                            current_tt = re.search('Time travels\*\*: (.+?)$', progress_field).group(1)
+                            current_tt = int(current_tt)
+                        except:
+                            current_tt = 0
                     try:
                         user_settings: database.User = await database.get_user(user.id)
                         await user_settings.update(current_tt=current_tt)
