@@ -1,14 +1,13 @@
 # events.py
 """Contains the on_message handling for auto flex alerts"""
 
-from logging import log
-from os import replace
+import re
+
 import discord
-from discord import emoji
 from discord.ext import commands
 
 import database
-from resources import emojis, logs, settings, strings
+from resources import exceptions, emojis, logs, settings
 
 
 class AutoFlexCog(commands.Cog):
@@ -52,6 +51,46 @@ class AutoFlexCog(commands.Cog):
                     f'Footer {message_footer}'
                 )
 
+            # Update current user TT
+            if message.embeds:
+                embed = message.embeds[0]
+                if '\'s profile' in message_author.lower() and embed.fields:
+                    progress_field = embed.fields[0].value
+                    icon_url = embed.author.icon_url
+                    user_id = user_name = user = None
+                    try:
+                        user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
+                    except:
+                        try:
+                            user_name = re.search("^(.+?)'s profile", message_author).group(1)
+                            user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        except Exception as error:
+                            await message.add_reaction(emojis.WARNING)
+                            await database.log_error(error)
+                            return
+                    if user_id is not None:
+                        user = await message.guild.fetch_member(user_id)
+                    else:
+                        for member in message.guild.members:
+                            member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            if member_name == user_name:
+                                user = member
+                                break
+                    if user is None:
+                        await message.add_reaction(emojis.WARNING)
+                        await database.log_error(f'User not found in profile message: {message}')
+                        return
+                    try:
+                        current_tt = re.search('Time travels\*\*: (.+?)$', progress_field).group(1)
+                        current_tt = int(current_tt)
+                    except:
+                        current_tt = 0
+                    try:
+                        user_settings: database.User = await database.get_user(user.id)
+                        await user_settings.update(current_tt=current_tt)
+                    except exceptions.NoDataFoundError:
+                        user_settings = await database.insert_user(user.id, current_tt)
+
             event = ''
             if 'is this a **dream**????' in message_content.lower():
                 event = 'work_ultra'
@@ -68,7 +107,7 @@ class AutoFlexCog(commands.Cog):
                 logs.logger.info(message_content)
             if ('you have got a new pet!' in message_content.lower()
                 and '<:epicskill' in message_content.lower()
-                and '[F]' in message_author.lower()):
+                and '[f]' in message_content.lower()):
                 event = 'pet_epic'
                 logs.logger.info(message_content)
             if 'the melting heat required to forge this sword was so much' in message_content.lower():
@@ -137,30 +176,6 @@ class AutoFlexCog(commands.Cog):
             if 'has traveled in time' in message_content.lower():
                 event = 'pr_timetravel'
                 logs.logger.info(message_content)
-            """ Disabled because of enchant update, remove completely later
-            if "'s enchant" in message_content.lower():
-                if "equipment's enchant will be kept" in message_content.lower():
-                    return
-                enchants = ['edgy','ultra-edgy','omega','ultra-omega','godly']
-                if any(enchant in message_content.lower() for enchant in enchants):
-                    event = 'enchant_enchant'
-                    logs.logger.info(message_content)
-            if "'s refine" in message_content.lower():
-                enchants = ['ultra-edgy','omega','ultra-omega','godly']
-                if any(enchant in message_content.lower() for enchant in enchants):
-                    event = 'enchant_refine'
-                    logs.logger.info(message_content)
-            if "'s transmute" in message_content.lower():
-                enchants = ['omega','ultra-omega','godly']
-                if any(enchant in message_content.lower() for enchant in enchants):
-                    event = 'enchant_transmute'
-                    logs.logger.info(message_content)
-            if "'s transcend" in message_content.lower():
-                enchants = ['ultra-omega','godly']
-                if any(enchant in message_content.lower() for enchant in enchants):
-                    event = 'enchant_transcend'
-                    logs.logger.info(message_content)
-            """
             if "wait what? it landed on its side" in message_content.lower():
                 winnings_start_string = 'YOU WON '
                 winnings_start = message_content.find(winnings_start_string) + len(winnings_start_string)
@@ -298,10 +313,6 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'lb_godly_tt': f'{emojis.TIME_TRAVEL} WHAT. THE. SHIT.',
         'pr_ascension': f'{emojis.ASCENSION} Up up and away',
         'pr_timetravel': f'{emojis.TIME_TRAVEL} Allons-y!',
-        'enchant_enchant': f'{emojis.ENCHANTMENT} Simply enchanting!',
-        'enchant_refine': f'{emojis.ENCHANTMENT} Refine has a higher chance... they said',
-        'enchant_transmute': f'{emojis.ENCHANTMENT} Transmutant',
-        'enchant_transcend': f'{emojis.ENCHANTMENT} Lost in Transcendation',
         'gambling_coinflip': f'{emojis.COIN} Stop gambling, kids!',
         'gambling_slots': f'{emojis.SLOTS} JACKPOT',
         'gambling_wheel': f'{emojis.WHEEE} WHEEEEEEEEEEEEEEE.....',
@@ -337,10 +348,6 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'lb_godly_tt': get_lb_godly_tt_description,
         'pr_ascension': get_pr_ascension_description,
         'pr_timetravel': get_pr_timetravel_description,
-        'enchant_enchant': get_enchant_enchant_description,
-        'enchant_refine': get_enchant_refine_description,
-        'enchant_transmute': get_enchant_transmute_description,
-        'enchant_transcend': get_enchant_transcend_description,
         'gambling_coinflip': get_gambling_coinflip_description,
         'gambling_slots': get_gambling_slots_description,
         'gambling_wheel': get_gambling_wheel_description,
@@ -375,11 +382,7 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'lb_omega_ultra': 'https://c.tenor.com/dBaynU7zBaIAAAAi/love-box.gif',
         'lb_godly_tt': 'https://c.tenor.com/-BVQhBulOmAAAAAC/bruce-almighty-morgan-freeman.gif',
         'pr_ascension': 'https://c.tenor.com/Jpx1xCUOyz8AAAAC/ascend.gif',
-        'pr_timetravel': 'https://c.tenor.com/xXXrBidPuPEAAAAC/back-to-the-future-doc-brown.gif',
-        'enchant_enchant': 'https://c.tenor.com/0LZHWJz6lLIAAAAC/sword-in-the-stone-excalibur.gif',
-        'enchant_refine': 'https://c.tenor.com/-08JLwayFF8AAAAC/sword-inuyasha.gif',
-        'enchant_transmute': 'https://c.tenor.com/AvGZ4QEw6xUAAAAC/sword.gif',
-        'enchant_transcend': 'https://c.tenor.com/DUtaFIJVNiUAAAAd/skyward-sword-zelda.gif',
+        'pr_timetravel': 'https://c.tenor.com/VKwvOapbLeMAAAAC/boris-soiree-disco.gif',
         'gambling_coinflip': 'https://c.tenor.com/GtTxw8NRrlwAAAAC/dbh-connor.gif',
         'gambling_slots': 'https://c.tenor.com/vh6UO80RFmYAAAAC/toilet-paper-slot-machine.gif',
         'gambling_wheel': 'https://c.tenor.com/lmetHrqB8k4AAAAC/flossen-bubbles.gif',
@@ -400,7 +403,7 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
     }
 
     embed_title = flex_titles[event]
-    embed_description = await flex_description_functions[event](message_content)
+    embed_description = await flex_description_functions[event](message_content, message)
 
     if '**FlyingPanda**' in embed_description:
         #embed_description = f'{embed_description}\n\n:panda_face:'
@@ -426,7 +429,7 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
 
 
 # Functions
-async def get_work_ultra_description(message_content: str) -> str:
+async def get_work_ultra_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the work_ultra event"""
     user_name_string = '????? **'
     user_name_start = message_content.find(user_name_string) + len(user_name_string)
@@ -446,7 +449,7 @@ async def get_work_ultra_description(message_content: str) -> str:
     return description
 
 
-async def get_work_hyper_description(message_content: str) -> str:
+async def get_work_hyper_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the work_hyper event"""
     user_name_end = message_content.find('** is chopping')
     user_name_start = message_content.rfind('**', 0, user_name_end) + 2
@@ -466,7 +469,7 @@ async def get_work_hyper_description(message_content: str) -> str:
     return description
 
 
-async def get_pet_ultra_description(message_content: str) -> str:
+async def get_pet_ultra_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the pet_ultra event"""
     user_name_end = message_content.find("'s pets")
     user_name_start = message_content.rfind('"', 0, user_name_end) + 1
@@ -494,7 +497,7 @@ async def get_pet_ultra_description(message_content: str) -> str:
     return description
 
 
-async def get_pet_ascend_description(message_content: str) -> str:
+async def get_pet_ascend_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the pet_ascend event"""
     user_name_string = "skill\n"
     user_name_start = message_content.find(user_name_string) + len(user_name_string) + 2
@@ -511,7 +514,7 @@ async def get_pet_ascend_description(message_content: str) -> str:
     return description
 
 
-async def get_forge_godly_description(message_content: str) -> str:
+async def get_forge_godly_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the forge_godly event"""
     user_name_string = 'exhausted'
     user_name_start = message_content.find(user_name_string) + len(user_name_string) + 1
@@ -528,7 +531,7 @@ async def get_forge_godly_description(message_content: str) -> str:
     return description
 
 
-async def get_lb_100_description(message_content: str) -> str:
+async def get_lb_100_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the forge_godly event"""
     lootbox_type_emoji = {
         'common': emojis.LB_COMMON,
@@ -564,7 +567,7 @@ async def get_lb_100_description(message_content: str) -> str:
     return description
 
 
-async def get_lb_omega_description(message_content: str) -> str:
+async def get_lb_omega_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the lb_omega event"""
     hunt_together = True if 'are hunting together' in message_content else False
     if hunt_together:
@@ -597,7 +600,7 @@ async def get_lb_omega_description(message_content: str) -> str:
     return description
 
 
-async def get_lb_omega_partner_description(message_content: str) -> str:
+async def get_lb_omega_partner_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the lb_omega_partner event"""
 
     user_name_search = "** and **"
@@ -629,7 +632,7 @@ async def get_lb_omega_partner_description(message_content: str) -> str:
     return description
 
 
-async def get_lb_godly_description(message_content: str) -> str:
+async def get_lb_godly_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the lb_godly event"""
     hunt_together = True if 'are hunting together' in message_content else False
 
@@ -673,7 +676,7 @@ async def get_lb_godly_description(message_content: str) -> str:
     return description
 
 
-async def get_lb_edgy_ultra_description(message_content: str) -> str:
+async def get_lb_edgy_ultra_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the lb_edgy_ultra event"""
     user_name_end = message_content.find("'s lootbox")
     user_name_start = message_content.rfind('"', 0, user_name_end) + 1
@@ -700,7 +703,7 @@ async def get_lb_edgy_ultra_description(message_content: str) -> str:
     return description
 
 
-async def get_lb_omega_ultra_description(message_content: str) -> str:
+async def get_lb_omega_ultra_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the lb_omega_ultra event"""
     user_name_end = message_content.find("'s lootbox")
     user_name_start = message_content.rfind('"', 0, user_name_end) + 1
@@ -728,7 +731,7 @@ async def get_lb_omega_ultra_description(message_content: str) -> str:
     return description
 
 
-async def get_lb_godly_tt_description(message_content: str) -> str:
+async def get_lb_godly_tt_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the lb_godly_tt event"""
     user_name_end = message_content.find("'s lootbox")
     user_name_start = message_content.rfind('"', 0, user_name_end) + 1
@@ -755,7 +758,7 @@ async def get_lb_godly_tt_description(message_content: str) -> str:
     return description
 
 
-async def get_pr_ascension_description(message_content: str) -> str:
+async def get_pr_ascension_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the pr_ascension event"""
     user_name_end = message_content.find("** has unlocked")
     user_name_start = message_content.rfind('**', 0, user_name_end) + 2
@@ -770,101 +773,41 @@ async def get_pr_ascension_description(message_content: str) -> str:
     return description
 
 
-async def get_pr_timetravel_description(message_content: str) -> str:
+async def get_pr_timetravel_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the pr_timetravel event"""
     user_name_end = message_content.find("** has traveled")
     user_name_start = message_content.rfind('**', 0, user_name_end) + 2
     user_name = message_content[user_name_start:user_name_end]
-
-    description = (
-        f'**{user_name}** just traveled in time!\n\n'
-        f'Don\'t time travel too fast tho, or you start going backwards. Ask Einstein.'
-    )
-
-    return description
-
-
-async def get_enchant_enchant_description(message_content: str) -> str:
-    """Returns the embed description for the enchant_enchant event"""
-    user_name_end = message_content.find("'s enchant")
-    user_name_start = message_content.rfind('"', 0, user_name_end) + 1
-    user_name = message_content[user_name_start:user_name_end]
-
-    enchant_start_string = '~-~> '
-    enchant_start = message_content.find(enchant_start_string) + len(enchant_start_string)
-    enchant_end = message_content.find(' <~-~', enchant_start)
-    enchant = message_content[enchant_start:enchant_end]
-
-    description = (
-        f'**{user_name}** used `enchant` like the cool kids do.\n\n'
-        f'And managed to get a {enchant} enchant which only the super cool kids do.\n\n'
-        f'See, transcenders, _that\'s_ how you do it.\n\n'
-        f'Now someone get them some ice packs for their wrists.'
-    )
-
-    return description
-
-
-async def get_enchant_refine_description(message_content: str) -> str:
-    """Returns the embed description for the enchant_refine event"""
-    user_name_end = message_content.find("'s refine")
-    user_name_start = message_content.rfind('"', 0, user_name_end) + 1
-    user_name = message_content[user_name_start:user_name_end]
-
-    enchant_start_string = '~-~> '
-    enchant_start = message_content.find(enchant_start_string) + len(enchant_start_string)
-    enchant_end = message_content.find(' <~-~', enchant_start)
-    enchant = message_content[enchant_start:enchant_end]
-
-    description = (
-        f'**{user_name}** refined their gear and got a {enchant} enchant as a reward.\n\n'
-        f'Which is cool and all, but can you do that with `enchant`?'
-    )
+    user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+    user = None
+    for member in message.guild.members:
+        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+        if member_name == user_name:
+            user = member
+            break
+    if user is None:
+        await database.log_error(f'User not found in time travel message: {message}')
+        raise ValueError
+    try:
+        user_settings: database.User = await database.get_user(user.id)
+        description = (
+            f'**{user.name}** just sold all of their earthly belongings (I swear, all they think about is cash these '
+            f'days) and entered time travel **{user_settings.current_tt + 1}**!\n\n'
+            f'Have fun with that basic sword.'
+        )
+        new_tt = user_settings.current_tt + 1
+        await user_settings.update(current_tt=new_tt)
+    except exceptions.NoDataFoundError:
+        description = (
+            f'**{user_name}** just sold all of their earthly belongings (I swear, all they think about is cash these '
+            f'days) and entered a new time travel!\n\n'
+            f'Have fun with that basic sword.'
+        )
 
     return description
 
 
-async def get_enchant_transmute_description(message_content: str) -> str:
-    """Returns the embed description for the enchant_transmute event"""
-    user_name_end = message_content.find("'s transmute")
-    user_name_start = message_content.rfind('"', 0, user_name_end) + 1
-    user_name = message_content[user_name_start:user_name_end]
-
-    enchant_start_string = '~-~> '
-    enchant_start = message_content.find(enchant_start_string) + len(enchant_start_string)
-    enchant_end = message_content.find(' <~-~', enchant_start)
-    enchant = message_content[enchant_start:enchant_end]
-
-    description = (
-        f'**{user_name}** transmuted something and somehow got a {enchant} enchant.\n\n'
-        f'Listen to all the cheers!\n\n'
-        f'Just kidding, we are just laughing because you can\'t use `transcend` yet.'
-    )
-
-    return description
-
-
-async def get_enchant_transcend_description(message_content: str) -> str:
-    """Returns the embed description for the enchant_godly event"""
-    user_name_end = message_content.find("'s transcend")
-    user_name_start = message_content.rfind('"', 0, user_name_end) + 1
-    user_name = message_content[user_name_start:user_name_end]
-
-    enchant_start_string = '~-~> '
-    enchant_start = message_content.find(enchant_start_string) + len(enchant_start_string)
-    enchant_end = message_content.find(' <~-~', enchant_start)
-    enchant = message_content[enchant_start:enchant_end]
-
-    description = (
-        f'**{user_name}** transcended reality and got a {enchant} enchant.\n\n'
-        f'Stop spending so much money on enchants!\n\n'
-        f'Seriously, `enchant` is way cheaper.'
-    )
-
-    return description
-
-
-async def get_gambling_coinflip_description(message_content: str) -> str:
+async def get_gambling_coinflip_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the gambling_coinflip event"""
     user_name_end = message_content.find("'s coinflip")
     user_name_start = message_content.rfind('"', 0, user_name_end) + 1
@@ -897,7 +840,7 @@ async def get_gambling_coinflip_description(message_content: str) -> str:
     return description
 
 
-async def get_gambling_slots_description(message_content: str) -> str:
+async def get_gambling_slots_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the gambling_slots event"""
     user_name_end = message_content.find("'s slots")
     user_name_start = message_content.rfind('"', 0, user_name_end) + 1
@@ -929,7 +872,7 @@ async def get_gambling_slots_description(message_content: str) -> str:
     return description
 
 
-async def get_gambling_wheel_description(message_content: str) -> str:
+async def get_gambling_wheel_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the gambling_wheel event"""
     user_name_end = message_content.find("'s wheel")
     user_name_start = message_content.rfind('"', 0, user_name_end) + 1
@@ -962,7 +905,7 @@ async def get_gambling_wheel_description(message_content: str) -> str:
     return description
 
 
-async def get_horse_tier_description(message_content: str) -> str:
+async def get_horse_tier_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the gambling_slots event"""
 
     horse_tier_emojis = {
@@ -1017,7 +960,7 @@ async def get_horse_tier_description(message_content: str) -> str:
     return description
 
 
-async def get_event_boss_description(message_content: str) -> str:
+async def get_event_boss_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the event_boss event"""
     user_names_search = 'Players: '
     user_names_start = message_content.find(user_names_search) + len(user_names_search)
@@ -1051,7 +994,7 @@ async def get_event_boss_description(message_content: str) -> str:
     return description
 
 
-async def get_event_lb_description(message_content: str) -> str:
+async def get_event_lb_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the event_lb event"""
     user_name_end = message_content.find("** uses a")
     user_name_start = message_content.rfind(' **', 0, user_name_end) + 3
@@ -1066,7 +1009,7 @@ async def get_event_lb_description(message_content: str) -> str:
     return description
 
 
-async def get_event_enchant_description(message_content: str) -> str:
+async def get_event_enchant_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the event_enchant event"""
     user_name_end = message_content.find("** tries to enchant")
     user_name_start = message_content.rfind(' **', 0, user_name_end) + 3
@@ -1081,7 +1024,7 @@ async def get_event_enchant_description(message_content: str) -> str:
     return description
 
 
-async def get_event_farm_description(message_content: str) -> str:
+async def get_event_farm_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the event_farm event"""
     user_name_end = message_content.find("** HITS THE FLOOR")
     user_name_start = message_content.rfind(' **', 0, user_name_end) + 3
@@ -1097,7 +1040,7 @@ async def get_event_farm_description(message_content: str) -> str:
     return description
 
 
-async def get_event_heal_description(message_content: str) -> str:
+async def get_event_heal_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the event_heal event"""
     user_name_end = message_content.find("** killed the")
     user_name_start = message_content.rfind('**', 0, user_name_end) + 2
@@ -1113,7 +1056,7 @@ async def get_event_heal_description(message_content: str) -> str:
     return description
 
 
-async def get_event_jail_description(message_content: str) -> str:
+async def get_event_jail_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the event_jail event"""
     user_name_end = message_content.find("** killed the")
     user_name_start = message_content.rfind('**', 0, user_name_end) + 2
@@ -1128,7 +1071,7 @@ async def get_event_jail_description(message_content: str) -> str:
     return description
 
 
-async def get_event_hunt_description(message_content: str) -> str:
+async def get_event_hunt_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the event_hunt event"""
     user_name_end = message_content.find("** fights the horde")
     user_name_start = message_content.rfind(' **', 0, user_name_end) + 3
@@ -1156,7 +1099,7 @@ async def get_event_hunt_description(message_content: str) -> str:
     return description
 
 
-async def get_cookies_description(message_content: str) -> str:
+async def get_cookies_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the cookies event"""
     user_name_end = message_content.find("** ate")
     user_name_start = message_content.rfind('**', 0, user_name_end) + 2
@@ -1183,7 +1126,7 @@ async def get_cookies_description(message_content: str) -> str:
     return description
 
 
-async def get_lb_mysterious_description(message_content: str) -> str:
+async def get_lb_mysterious_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the lb_mysterious event"""
     hunt_together = True if 'are hunting together' in message_content else False
 
@@ -1229,7 +1172,7 @@ async def get_lb_mysterious_description(message_content: str) -> str:
     return description
 
 
-async def get_present_godly_description(message_content: str) -> str:
+async def get_present_godly_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the lb_omega event"""
     hunt_together = True if 'are hunting together' in message_content else False
 
@@ -1268,7 +1211,7 @@ async def get_present_godly_description(message_content: str) -> str:
     return description
 
 
-async def get_present_godly_farm_description(message_content: str) -> str:
+async def get_present_godly_farm_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the lb_omega event"""
 
     user_name_end = message_content.find("** plants")
@@ -1289,7 +1232,7 @@ async def get_present_godly_farm_description(message_content: str) -> str:
     return description
 
 
-async def get_present_godly_training_description(message_content: str) -> str:
+async def get_present_godly_training_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the lb_omega event"""
 
     user_name_end = message_content.find("** !")
@@ -1310,7 +1253,7 @@ async def get_present_godly_training_description(message_content: str) -> str:
     return description
 
 
-async def get_present_godly_quest_description(message_content: str) -> str:
+async def get_present_godly_quest_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the lb_omega event"""
 
     user_name_end = message_content.find("** got")
@@ -1331,7 +1274,7 @@ async def get_present_godly_quest_description(message_content: str) -> str:
     return description
 
 
-async def get_pet_epic_description(message_content: str) -> str:
+async def get_pet_epic_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the pet_epic event"""
 
     description = (

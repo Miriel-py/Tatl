@@ -1,6 +1,7 @@
 # database.py
 """Access to the database"""
 
+from dataclasses import dataclass
 from datetime import datetime
 import sqlite3
 from typing import NamedTuple, Optional, Union
@@ -11,7 +12,7 @@ from discord.ext import commands
 from resources import exceptions, logs, settings, strings
 
 
-ERG_DB = sqlite3.connect(settings.DB_FILE, isolation_level=None)
+TATL_DB = sqlite3.connect(settings.DB_FILE, isolation_level=None)
 
 
 INTERNAL_ERROR_NO_DATA_FOUND = 'No data found in database.\nTable: {table}\nFunction: {function}\nSQL: {sql}'
@@ -39,6 +40,28 @@ class Guild(NamedTuple):
     rumble: GuildEvent
     summon: GuildEvent
 
+@dataclass()
+class User():
+    """Object that represents a record from table "user"."""
+    current_tt: int
+    user_id: int
+
+    async def refresh(self) -> None:
+        """Refreshes user data from the database."""
+        new_settings: User = await get_user(self.user_id)
+        self.current_tt = new_settings.current_tt
+
+    async def update(self, **kwargs) -> None:
+        """Updates the user record in the database. Also calls refresh().
+
+        Arguments
+        ---------
+        kwargs (column=value):
+            current_tt: int
+        """
+        await _update_user(self, **kwargs)
+        await self.refresh()
+
 
 async def log_error(error: Union[Exception, str], ctx: Optional[discord.ApplicationContext] = None):
     """Logs an error to the database and the logfile
@@ -57,21 +80,60 @@ async def log_error(error: Union[Exception, str], ctx: Optional[discord.Applicat
     function_name = 'log_error'
     sql = 'INSERT INTO errors VALUES (?, ?, ?, ?)'
     if ctx is not None:
-        command_name = f'{ctx.command.full_parent_name} {ctx.command.name}'.strip()
         timestamp = ctx.author.created_at
-        user_options = str(ctx.interaction.data['options'])
+        command_name = f'{ctx.command.full_parent_name} {ctx.command.name}'.strip()
+        command_data = str(ctx.interaction.data['options'])
     else:
         timestamp = datetime.utcnow()
-        user_options = 'N/A'
+        command_name = 'N/A'
+        command_data = 'N/A'
     try:
-        cur = ERG_DB.cursor()
-        cur.execute(sql, (timestamp, command_name, user_options, str(error)))
+        cur = TATL_DB.cursor()
+        cur.execute(sql, (timestamp, command_name, command_data, str(error)))
     except sqlite3.Error as error:
         logs.logger.error(
             INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql),
             ctx
         )
         raise
+
+
+async def get_user(user_id: int) -> User:
+    """Gets all user settings.
+
+    Returns
+    -------
+    User object
+
+    Raises
+    ------
+    sqlite3.Error if something happened within the database.
+    exceptions.NoDataFoundError if no user was found.
+    LookupError if something goes wrong reading the dict.
+    Also logs all errors to the database.
+    """
+    table = 'users'
+    function_name = 'get_user'
+    sql = f'SELECT * FROM {table} WHERE user_id=?'
+    try:
+        cur = TATL_DB.cursor()
+        cur.row_factory = sqlite3.Row
+        cur.execute(sql, (user_id,))
+        record = cur.fetchone()
+    except sqlite3.Error as error:
+        await log_error(
+            INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
+        )
+        raise
+    if not record:
+        raise exceptions.NoDataFoundError(f'No user data found in database for user "{user_id}".')
+    record = dict(record)
+    user = User(
+        current_tt = record['current_tt'],
+        user_id = record['user_id'],
+    )
+
+    return user
 
 
 # --- Database: Get Data ---
@@ -85,14 +147,13 @@ async def get_guild(ctx_or_guild: Union[discord.ApplicationContext, discord.Guil
     Raises
     ------
     sqlite3.Error if something happened within the database.
-    exceptions.NoDataFoundError if no guild was found.
     LookupError if something goes wrong reading the dict.
     Also logs all errors to the database.
     """
     table = 'settings_guild'
     function_name = 'get_guild'
     sql = 'SELECT * FROM settings_guild where guild_id=?'
-    database_error = '{error}\nFunction: {function}'
+    error = '{error}\nFunction: {function}'
     if isinstance(ctx_or_guild, (discord.ApplicationContext, commands.Context)):
         ctx = ctx_or_guild
         guild_id = ctx.guild.id
@@ -100,7 +161,7 @@ async def get_guild(ctx_or_guild: Union[discord.ApplicationContext, discord.Guil
         ctx = None
         guild_id = ctx_or_guild.id
     try:
-        cur = ERG_DB.cursor()
+        cur = TATL_DB.cursor()
         cur.row_factory = sqlite3.Row
         cur.execute(sql, (guild_id,))
         record = cur.fetchone()
@@ -200,6 +261,72 @@ async def get_guild(ctx_or_guild: Union[discord.ApplicationContext, discord.Guil
 
 
 # --- Database: Write Data ---
+async def _update_user(user: User, **kwargs) -> None:
+    """Updates user record. Use User.update() to trigger this function.
+
+    Arguments
+    ---------
+    user_id: int
+    kwargs (column=value):
+        current_tt: int
+
+    Raises
+    ------
+    sqlite3.Error if something happened within the database.
+    NoArgumentsError if no kwargs are passed (need to pass at least one)
+    Also logs all errors to the database.
+    """
+    table = 'users'
+    function_name = '_update_user'
+    if not kwargs:
+        await log_error(
+            INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
+        )
+        raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
+    try:
+        cur = TATL_DB.cursor()
+        sql = f'UPDATE {table} SET'
+        for kwarg in kwargs:
+            sql = f'{sql} {kwarg} = :{kwarg},'
+        sql = sql.strip(",")
+        kwargs['user_id'] = user.user_id
+        sql = f'{sql} WHERE user_id = :user_id'
+        cur.execute(sql, kwargs)
+    except sqlite3.Error as error:
+        await log_error(
+            INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
+        )
+        raise
+
+
+async def insert_user(user_id: int, current_tt: int) -> User:
+    """Inserts a record in the table "users".
+
+    Returns
+    -------
+    User object with the newly created user.
+
+    Raises
+    ------
+    sqlite3.Error if something happened within the database.
+    Also logs all errors to the database.
+    """
+    function_name = 'insert_user'
+    table = 'users'
+    sql = f'INSERT INTO {table} (user_id, current_tt) VALUES (?, ?)'
+    try:
+        cur = TATL_DB.cursor()
+        cur.execute(sql, (user_id, current_tt))
+    except sqlite3.Error as error:
+        await log_error(
+            INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
+        )
+        raise
+    user = await get_user(user_id)
+
+    return user
+
+
 async def update_guild(ctx: discord.ApplicationContext, **kwargs) -> None:
     """Updates guild settings.
 
@@ -237,8 +364,8 @@ async def update_guild(ctx: discord.ApplicationContext, **kwargs) -> None:
     Raises
     ------
     sqlite3.Error if something happened within the database.
-    NoArgumentsError if not kwargs are passed (need to pass at least one)
-    Also logs all error to the database.
+    NoArgumentsError if no kwargs are passed (need to pass at least one)
+    Also logs all errors to the database.
     """
     table = 'settings_guild'
     function_name = 'update_guild'
@@ -251,7 +378,7 @@ async def update_guild(ctx: discord.ApplicationContext, **kwargs) -> None:
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
     await get_guild(ctx) # Makes sure the user exists in the database
     try:
-        cur = ERG_DB.cursor()
+        cur = TATL_DB.cursor()
         sql = 'UPDATE settings_guild SET'
         for kwarg in kwargs:
             sql = f'{sql} {kwarg} = :{kwarg},'

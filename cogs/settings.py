@@ -2,9 +2,8 @@
 """Contains settings commands"""
 
 import discord
-from discord.commands import slash_command
+from discord.commands import slash_command, Option, SlashCommandGroup
 from discord.enums import SlashCommandOptionType
-from discord.commands import Option, SlashCommandGroup
 from discord.ext import commands
 
 import database

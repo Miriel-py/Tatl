@@ -25,7 +25,8 @@ class EventsCog(commands.Cog):
                 'took the seed from the ground and decided to try planting it again later',
                 'While trying to enchant your broken sword again',
                 'What?? Get in the car',
-                'died fighting the **mysterious man**'
+                'died fighting the **mysterious man**',
+                'again, it **exploded**'
             ]
             if ('For some completely unknown reason, the following pets are back instantly' in message_content
                 or 'IT CAME BACK INSTANTLY!!' in message_content):

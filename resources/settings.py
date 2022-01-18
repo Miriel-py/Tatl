@@ -5,7 +5,6 @@ import os
 from dotenv import load_dotenv
 
 
-# Read the bot token from the .env file
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 DEBUG_MODE = os.getenv('DEBUG_MODE')
@@ -14,6 +13,7 @@ BOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_FILE = os.path.join(BOT_DIR, 'database/tatl_db.db')
 LOG_FILE = os.path.join(BOT_DIR, 'logs/discord.log')
 
+OWNER_ID = 619879176316649482
 DEV_GUILDS = [730115558766411857,]
 
 EPIC_RPG_ID = 555955826880413696

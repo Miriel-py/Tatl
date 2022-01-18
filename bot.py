@@ -9,14 +9,15 @@ from resources import settings
 intents = discord.Intents.none()
 intents.guilds = True   # for on_guild_join() and all guild objects
 intents.messages = True   # for literally everything the bot does
+intents.members = True  # To be able to look up user info
 
 
 if settings.DEBUG_MODE == 'ON':
     bot = commands.Bot(help_command=None, case_insensitive=True, intents=intents,
-                       debug_guilds=settings.DEV_GUILDS, owner_id=619879176316649482)
+                       debug_guilds=settings.DEV_GUILDS, owner_id=settings.OWNER_ID)
 else:
     bot = commands.Bot(help_command=None, case_insensitive=True, intents=intents,
-                       owner_id=619879176316649482)
+                       owner_id=settings.OWNER_ID)
 
 
 EXTENSIONS = [

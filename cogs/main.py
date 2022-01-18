@@ -24,7 +24,7 @@ class MainCog(commands.Cog):
         await ctx.respond(embed=embed)
 
     @slash_command()
-    async def about(self, ctx: discord.ApplicationContext):
+    async def about(self, ctx: discord.ApplicationContext) -> None:
         """Shows some info about Tatl"""
         start_time = datetime.utcnow()
         await ctx.respond('Testing API latency...')
