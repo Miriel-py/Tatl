@@ -62,8 +62,7 @@ class AutoFlexCog(commands.Cog):
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
                         try:
-
-                            user_name = re.search("^(.+?)'s", message_author).group(1)
+                            user_name = re.search("^(.+?)'s", embed.author.name).group(1)
                             user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                         except Exception as error:
                             await message.add_reaction(emojis.WARNING)
@@ -83,6 +82,7 @@ class AutoFlexCog(commands.Cog):
                         return
                     if 'time travel' in message_author.lower():
                         progress_field = embed.description
+                        if 'you will come back to the beginning' in progress_field.lower(): return
                         try:
                             current_tt = re.search('Time travels\*\*: (.+?)\\n', progress_field).group(1)
                             current_tt = int(current_tt)
@@ -126,8 +126,7 @@ class AutoFlexCog(commands.Cog):
             if 'lootbox opened! (x100)' in message_content.lower():
                 event = 'lb_100'
                 logs.logger.info(message_content)
-            if ('found and killed' in message_content.lower() and 'omega lootbox' in message_content.lower()
-                and '(but stronger)' not in message_content.lower()):
+            if 'found and killed' in message_content.lower() and 'omega lootbox' in message_content.lower():
                 event = 'lb_omega'
                 logs.logger.info(message_content)
             if 'are hunting together' in message_content.lower() and 'omega lootbox' in message_content.lower():
@@ -141,11 +140,9 @@ class AutoFlexCog(commands.Cog):
                 if lb_amount_end - lb_amount_start > 3:
                     event = 'lb_omega_partner'
                     logs.logger.info(message_content)
-                elif '(but stronger)' not in message_content.lower():
+                else:
                     event = 'lb_omega'
                     logs.logger.info(message_content)
-                else:
-                    return
             # Christmas godly present
             if (('found and killed' in message_content.lower() or 'are hunting together' in message_content.lower())
                 and 'godly present' in message_content.lower()):
@@ -161,8 +158,6 @@ class AutoFlexCog(commands.Cog):
                 and 'godly present' in message_content.lower()):
                 event = 'present_godly_quest'
                 logs.logger.info(message_content)
-
-
             if (('found and killed' in message_content.lower() or 'are hunting together' in message_content.lower())
                   and 'godly lootbox' in message_content.lower()):
                 event = 'lb_godly'
@@ -602,10 +597,18 @@ async def get_lb_omega_description(message_content: str, message: discord.Messag
         await database.log_error(f'Error: {error}\nFunction: get_lb_omega_description\nlootbox_amount: {lb_amount}')
         return
 
-    description = (
-        f'**{user_name}** just found {lb_amount} {emojis.LB_OMEGA} OMEGA lootbox completely without any hardmodes!\n\n'
-        f'Take this, ascended hardmoding cheap mode people! That\'s how you do it.'
-    )
+    if '(but stronger)' not in message_content:
+        description = (
+            f'**{user_name}** just found {lb_amount} {emojis.LB_OMEGA} OMEGA lootbox completely without any hardmodes!\n\n'
+            f'Take this, ascended hardmoding cheap mode people! That\'s how you do it.'
+        )
+    else:
+        description = (
+            f'**{user_name}** just found {lb_amount} {emojis.LB_OMEGA} OMEGA lootbox! Oh joy, such a rare thing!\n'
+            f'Huh.\n'
+            f'I mean.\n'
+            f'Yes.'
+        )
 
     return description
 
