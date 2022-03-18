@@ -102,11 +102,20 @@ class AutoFlexCog(commands.Cog):
                         user_settings = await database.insert_user(user.id, current_tt)
 
             event = ''
+            if 'this may be the luckiest moment of your life' in message_content.lower():
+                event = 'work_ultimate'
+                logs.logger.info(message_content)
             if 'is this a **dream**????' in message_content.lower():
                 event = 'work_ultra'
                 logs.logger.info(message_content)
-            if 'wwwwwoooooooooaaaaaaaa!!!!1' in message_content.lower():
+            if 'wwwooooooaaa!!!1' in message_content.lower():
                 event = 'work_hyper'
+                logs.logger.info(message_content)
+            if 'ooofff!!' in message_content.lower():
+                event = 'work_superfish'
+                logs.logger.info(message_content)
+            if 'nice!' in message_content.lower() and 'watermelon' in message_content.lower():
+                event = 'work_watermelon'
                 logs.logger.info(message_content)
             if 'pet adventure rewards' in message_content.lower() and 'ultra log' in message_content.lower():
                 event = 'pet_ultra'
@@ -303,8 +312,11 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
     """Auto flex embed"""
 
     flex_titles = {
+        'work_ultimate': f'{emojis.LOG_ULTIMATE} Wood you log at that!',
         'work_ultra': f'{emojis.LOG_ULTRA} It\'s not a dream!',
         'work_hyper': f'{emojis.LOG_HYPER} Hyperino',
+        'work_superfish': f'{emojis.FISH_SUPER} How much is the fish?',
+        'work_watermelon': f'{emojis.WATERMELON} One in a melon',
         'pet_ultra': f'{emojis.LOG_ULTRA} ULTRA l...azy',
         'pet_ascend': f'{emojis.SKILL_ASCENDED} No skill champ',
         'pet_epic': f'{emojis.SKILL_EPIC} EEEEEEEPIC',
@@ -317,7 +329,7 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'lb_omega_ultra': f'{emojis.LOG_ULTRA} That\'s a lot of wood',
         'lb_godly_tt': f'{emojis.TIME_TRAVEL} WHAT. THE. SHIT.',
         'pr_ascension': f'{emojis.ASCENSION} Up up and away',
-        'pr_timetravel': f'{emojis.TIME_TRAVEL} Allons-y!',
+        'pr_timetravel': f'{emojis.TIME_TRAVEL} Allons-y !',
         'gambling_coinflip': f'{emojis.COIN} Stop gambling, kids!',
         'gambling_slots': f'{emojis.SLOTS} JACKPOT',
         'gambling_wheel': f'{emojis.WHEEE} WHEEEEEEEEEEEEEEE.....',
@@ -338,8 +350,11 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
     }
 
     flex_description_functions = {
+        'work_ultimate': get_work_ultimate_description,
         'work_ultra': get_work_ultra_description,
         'work_hyper': get_work_hyper_description,
+        'work_superfish': get_work_superfish_description,
+        'work_watermelon': get_work_watermelon_description,
         'pet_ultra': get_pet_ultra_description,
         'pet_ascend': get_pet_ascend_description,
         'pet_epic': get_pet_epic_description,
@@ -434,6 +449,27 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
 
 
 # Functions
+async def get_work_ultimate_description(message_content: str, message: discord.Message) -> str:
+    """Returns the embed description for the work_ultimate event"""
+    user_name_string = '...** **'
+    user_name_start = message_content.find(user_name_string) + len(user_name_string)
+    user_name_end = message_content.find('** got', user_name_start)
+    user_name = message_content[user_name_start:user_name_end]
+
+    log_amount_string = '** got '
+    log_amount_start = user_name_end + len(log_amount_string)
+    log_amount_end = message_content.find(' <', log_amount_start)
+    log_amount = message_content[log_amount_start:log_amount_end].strip()
+
+    description = (
+        f'**{user_name}** did some really weird shit with their chainsaws and found... {log_amount} '
+        f'{emojis.LOG_ULTIMATE} ULTIMATE logs!\n\n'
+        f'SUS I SAY. SUS.'
+    )
+
+    return description
+
+
 async def get_work_ultra_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the work_ultra event"""
     user_name_string = '????? **'
@@ -469,6 +505,47 @@ async def get_work_hyper_description(message_content: str, message: discord.Mess
         f'**{user_name}** was taking a walk in the park, when suddenly a tree fell over and split into {log_amount} {emojis.LOG_HYPER} HYPER logs.\n\n'
         f'You couldn\'t make this up, honestly.\n\n'
         f'Oh wait. You can.'
+    )
+
+    return description
+
+
+async def get_work_superfish_description(message_content: str, message: discord.Message) -> str:
+    """Returns the embed description for the work_superfish event"""
+    user_name_string = 'FFF!! **'
+    user_name_start = message_content.find(user_name_string) + len(user_name_string)
+    user_name_end = message_content.find('** got', user_name_start)
+    user_name = message_content[user_name_start:user_name_end]
+
+    log_amount_string = '** got '
+    log_amount_start = user_name_end + len(log_amount_string)
+    log_amount_end = message_content.find(' <', log_amount_start)
+    log_amount = message_content[log_amount_start:log_amount_end].strip()
+
+    description = (
+        f'**{user_name}** was quite amazed when they found {log_amount} weird {emojis.FISH_SUPER} purple fish in the sea.\n\n'
+        f'Let\'s go have a fish feast!'
+    )
+
+    return description
+
+
+async def get_work_watermelon_description(message_content: str, message: discord.Message) -> str:
+    """Returns the embed description for the work_watermelon event"""
+    user_name_string = 'NICE! **'
+    user_name_start = message_content.find(user_name_string) + len(user_name_string)
+    user_name_end = message_content.find('** got', user_name_start)
+    user_name = message_content[user_name_start:user_name_end]
+
+    log_amount_string = '** got '
+    log_amount_start = user_name_end + len(log_amount_string)
+    log_amount_end = message_content.find(' <', log_amount_start)
+    log_amount = message_content[log_amount_start:log_amount_end].strip()
+
+    description = (
+        f'**{user_name}** got tired of apples and bananas and stole {log_amount} {emojis.WATERMELON} watermelons '
+        f'instead.\n\n'
+        f'They should be ashamed. And also make some cocktails for everyone.'
     )
 
     return description
@@ -750,7 +827,7 @@ async def get_lb_godly_tt_description(message_content: str, message: discord.Mes
     user_name_start = message_content.rfind('"', 0, user_name_end) + 1
     user_name = message_content[user_name_start:user_name_end]
 
-    tt_amount_end = message_content.find(' :cyclone')
+    tt_amount_end = message_content.find(' <:timetravel')
     tt_amount_start = message_content.rfind('+', 0, tt_amount_end) + 1
     tt_amount = message_content[tt_amount_start:tt_amount_end]
     try:
@@ -764,7 +841,7 @@ async def get_lb_godly_tt_description(message_content: str, message: discord.Mes
     description = (
         f'So.\n**{user_name}** opened an {emojis.LB_GODLY} GODLY lootbox.\nThat\'s cool.\n\n'
         f'BUT.\nFor some reason they found {tt_amount} {emojis.TIME_TRAVEL} fucking time travels in there. HOW?!\n\n'
-        f'This is probably a world first, so expect to be blacklisted from the game.\n'
+        f'This hasn\'t happened a lot at all, so expect to be blacklisted from the game.\n'
         f'Before that, go share it in the EROS loot channel tho, they will go crazy.'
     )
 

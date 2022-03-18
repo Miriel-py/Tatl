@@ -22,7 +22,6 @@ SLOTS_100 = ':100:'
 SLOTS_CLOVER = ':four_leaf_clover:'
 SLOTS = ':slot_machine:'
 
-
 # Horses
 HORSE_T1 = '<:erg_horset1:770327272359723119>'
 HORSE_T2 = '<:erg_horset2:770327272636547112>'
@@ -47,9 +46,12 @@ LB_UNCOMMON = '<:erg_uncommonlootbox:770547275528667137>'
 
 # Materials
 ARENA_COOKIE = '<:erg_arenacookie:770324898068955186>'
+FISH_SUPER = '<:superfish:931087456416202753>'
 LOG_HYPER = '<:erg_hyperlog:770324898093596722>'
 LOG_ULTRA = '<:erg_ultralog:770324898345648179>'
+LOG_ULTIMATE = '<:ultimatelog:931087456479088681>'
 SEED = '<:erg_seed:824527296173047859>'
+WATERMELON = '<:watermelon:931088046265360404>'
 ZOMBIE_EYE = '<:erg_zombieeye:770324898194915328>'
 
 # Pet skills
@@ -78,7 +80,7 @@ SKILL_TIME_TRAVELER = '<:erg_skilltimetraveler:770327200217169962>'
 SLAP = '<:slap2:836687783799947306>'
 SUS = '<:sus:818793691711275019>'
 TATL = '<:tatl:839791822317420544>'
-TIME_TRAVEL = ':cyclone:'
+TIME_TRAVEL = '<:erg_timetravel:947028582818009118>'
 WHEEE = '<a:wheeee:884096696911536148>'
 XMAS_YAY = '<:pepe_xmas_yay:915658094753755166>'
 WARNING = '⚠️'
