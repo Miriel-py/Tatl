@@ -9,6 +9,7 @@ from resources import settings
 intents = discord.Intents.none()
 intents.guilds = True   # for on_guild_join() and all guild objects
 intents.messages = True   # for literally everything the bot does
+intents.message_content = True   # for literally everything the bot does
 intents.members = True  # To be able to look up user info
 # intents.message_content = True # for message content
 
