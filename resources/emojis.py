@@ -6,6 +6,7 @@ COIN = '<:erg_coin:770327166830510151>'
 
 # Equipment
 SWORD_GODLY = '<:erg_godlysword:799388569688211536>'
+SWORD_GODLYCOOKIE = '<:godlycookie:879251636806098975>'
 
 # Events
 EVENT_ARENA = '<:erg_arenacookie:770324898068955186>'

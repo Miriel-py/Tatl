@@ -132,6 +132,9 @@ class AutoFlexCog(commands.Cog):
             if 'the melting heat required to forge this sword was so much' in message_content.lower():
                 event = 'forge_godly'
                 logs.logger.info(message_content)
+            if 'bunch of cookies against the godly sword and then leaves it' in message_content.lower():
+                event = 'forge_cookie'
+                logs.logger.info(message_content)
             if 'lootbox opened! (x100)' in message_content.lower():
                 event = 'lb_100'
                 logs.logger.info(message_content)
@@ -143,10 +146,17 @@ class AutoFlexCog(commands.Cog):
                 user_name_end = message_content.find(user_name_search)
                 user_name_start = message_content.rfind('**', 0, user_name_end) + 2
                 user_name = message_content[user_name_start:user_name_end]
+                partner_name_start = user_name_end + len(user_name_search)
+                partner_name_end = message_content.find('**', partner_name_start)
+                partner_name = message_content[partner_name_start:partner_name_end]
+                partner_message_start = message_content.find(f'**{partner_name}**:')
                 lb_amount_end = message_content.rfind(' <:OMEGA')
                 lb_amount_start_search = f'**{user_name}** got '
                 lb_amount_start = message_content.rfind(lb_amount_start_search, 0, lb_amount_end) + len(lb_amount_start_search)
-                if lb_amount_end - lb_amount_start > 3:
+                if lb_amount_start == len(lb_amount_start_search) - 1:
+                    lb_amount_start_search = '+'
+                    lb_amount_start = message_content.rfind(lb_amount_start_search, 0, lb_amount_end) + len(lb_amount_start_search)
+                if lb_amount_end > partner_message_start:
                     event = 'lb_omega_partner'
                     logs.logger.info(message_content)
                 else:
@@ -321,6 +331,7 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'pet_ascend': f'{emojis.SKILL_ASCENDED} No skill champ',
         'pet_epic': f'{emojis.SKILL_EPIC} EEEEEEEPIC',
         'forge_godly': f'{emojis.SWORD_GODLY} Almost a cookie',
+        'forge_cookie': f'{emojis.SWORD_GODLYCOOKIE} Caution! Hot cookie!',
         'lb_100': f'{emojis.SLOTS_100} Look at that pile!',
         'lb_omega': f'{emojis.LB_OMEGA} Ohh... shiny!',
         'lb_omega_partner': f'{emojis.LB_OMEGA} Oops, wrong recipient, lol',
@@ -359,6 +370,7 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'pet_ascend': get_pet_ascend_description,
         'pet_epic': get_pet_epic_description,
         'forge_godly': get_forge_godly_description,
+        'forge_cookie': get_forge_cookie_description,
         'lb_100': get_lb_100_description,
         'lb_omega': get_lb_omega_description,
         'lb_omega_partner': get_lb_omega_partner_description,
@@ -394,6 +406,7 @@ async def embed_auto_flex(message: discord.Message, message_content:str, event: 
         'pet_ascend': 'https://c.tenor.com/yyiGOtquk74AAAAC/rocket-clicks-rocket.gif',
         'pet_epic': 'https://c.tenor.com/yEIrzx7iFU4AAAAC/dog-meme.gif',
         'forge_godly': 'https://c.tenor.com/OSYJN4DF0tEAAAAC/light-up.gif',
+        'forge_cookie': 'https://c.tenor.com/CqkklVxeZckAAAAC/cookie-monster.gif',
         'lb_100': 'https://c.tenor.com/gHygBs_JkKwAAAAi/moving-boxes.gif',
         'lb_omega': 'https://c.tenor.com/8yMrP1Cs7ykAAAAC/ninjala-ninjala-season6trailer.gif',
         'lb_omega_partner': 'https://c.tenor.com/l0wNXZN58S8AAAAC/delivery-kick.gif',
@@ -607,7 +620,22 @@ async def get_forge_godly_description(message_content: str, message: discord.Mes
         f'**Someone** (idk, go check for yourself) forged a GODLY sword!\n\n'
         f'Wowzers, what an amazing thing!\n\n'
         f'Oh wait. It has 0 AT, lol.\n\n'
-        f'Some folks really to anything for fame, I swear.'
+        f'Some folks really do anything for fame, I swear.'
+    )
+
+    return description
+
+
+async def get_forge_cookie_description(message_content: str, message: discord.Message) -> str:
+    """Returns the embed description for the forge_cookie event"""
+    user_name_string = '**'
+    user_name_start = message_content.find(user_name_string) + len(user_name_string)
+    user_name_end = message_content.find('** press', user_name_start)
+    user_name = message_content[user_name_start:user_name_end]
+
+    description = (
+        f'Oh boy, oh boy, someone is going to try to beat the EPIC NPC\'s ass today!\n'
+        f'Unless **{user_name}** just crafted a GODLY cookie for fun. You never know.'
     )
 
     return description
@@ -666,6 +694,9 @@ async def get_lb_omega_description(message_content: str, message: discord.Messag
     lb_amount_end = message_content.find(' <:OMEGA')
     lb_amount_start_search = f'**{user_name}** got '
     lb_amount_start = message_content.rfind(lb_amount_start_search, 0, lb_amount_end) + len(lb_amount_start_search)
+    if lb_amount_start == len(lb_amount_start_search) - 1:
+        lb_amount_start_search = '+'
+        lb_amount_start = message_content.rfind(lb_amount_start_search, 0, lb_amount_end) + len(lb_amount_start_search)
     lb_amount = message_content[lb_amount_start:lb_amount_end]
 
     try:
@@ -704,6 +735,9 @@ async def get_lb_omega_partner_description(message_content: str, message: discor
     lb_amount_end = message_content.rfind(' <:OMEGA')
     lb_amount_start_search = f'**{partner_name}** got '
     lb_amount_start = message_content.rfind(lb_amount_start_search, 0, lb_amount_end) + len(lb_amount_start_search)
+    if lb_amount_start == len(lb_amount_start_search) - 1:
+        lb_amount_start_search = '+'
+        lb_amount_start = message_content.rfind(lb_amount_start_search, 0, lb_amount_end) + len(lb_amount_start_search)
     lb_amount = message_content[lb_amount_start:lb_amount_end]
 
     try:

@@ -54,14 +54,14 @@ ALERT_COLUMNS = {
 # Key: Event name
 # Value: Default message
 DEFAULT_MESSAGES = {
-    'arena': f'Type **`JOIN`** to get {emojis.EVENT_ARENA} cookies!',
-    'catch': f'Type **`CATCH`** to get {emojis.EVENT_CATCH} coins!',
-    'chop': f'Type **`CHOP`** to get {emojis.EVENT_CHOP} logs!',
-    'fish': f'Type **`FISH`** to get {emojis.EVENT_FISH} fish!',
-    'miniboss': f'Type **`FIGHT`** to defeat the {emojis.EVENT_MINIBOSS} miniboss!',
-    'legendary-boss': f'Type **`TIME TO FIGHT`** to defeat the {emojis.EVENT_BOSS} boss!',
-    'rumble-royale': f'Click {emojis.EVENT_RUMBLE} to join the fight!',
-    'summon': f'Type **`SUMMON`** to get a {emojis.EVENT_SUMMON} lootbox!',
+    'arena': f'Type or click on **`JOIN`** to get {emojis.EVENT_ARENA} cookies!',
+    'catch': f'Type or click on **`CATCH`** to get {emojis.EVENT_CATCH} coins!',
+    'chop': f'Type or click on **`CHOP`** to get {emojis.EVENT_CHOP} logs!',
+    'fish': f'Type or click on **`FISH`** to get {emojis.EVENT_FISH} fish!',
+    'miniboss': f'Type or click on **`FIGHT`** to defeat the {emojis.EVENT_MINIBOSS} miniboss!',
+    'legendary-boss': f'Type or click on **`TIME TO FIGHT`** to defeat the {emojis.EVENT_BOSS} boss!',
+    'rumble-royale': f'Click on {emojis.EVENT_RUMBLE} to join the fight!',
+    'summon': f'Type or click on **`SUMMON`** to get a {emojis.EVENT_SUMMON} lootbox!',
 }
 
 MSG_SYNTAX = 'The command syntax is `{syntax}`'
