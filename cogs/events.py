@@ -19,25 +19,6 @@ class EventsCog(commands.Cog):
         """Runs when a message is sent in a channel."""
         if message.author.id == settings.EPIC_RPG_ID and not message.embeds:
             message_content = message.content
-            laugh_terms = [
-                'You just lost your lootbox',
-                'fighting them wasn\'t very clever',
-                'took the seed from the ground and decided to try planting it again later',
-                'While trying to enchant your broken sword again',
-                'What?? Get in the car',
-                'died fighting the **mysterious man**',
-                'again, it **exploded**'
-            ]
-            if ('For some completely unknown reason, the following pets are back instantly' in message_content
-                or 'IT CAME BACK INSTANTLY!!' in message_content):
-                await message.add_reaction(emojis.SKILL_TIME_TRAVELER)
-                return
-            elif 'CHRISTMAS SLIME' in message_content and 'got 100' in message_content:
-                await message.add_reaction(emojis.XMAS_YAY)
-                return
-            elif any(term in message_content for term in laugh_terms):
-                await message.add_reaction(emojis.PEPE_LAUGH)
-                return
 
         if message.author.id in (settings.EPIC_RPG_ID,settings.RUMBLE_ROYALE_ID) and message.embeds:
             try:
@@ -98,9 +79,6 @@ class EventsCog(commands.Cog):
                 return
 
             # Temporary reactions, move to Navi later
-            elif '** got bored and left' in message_content:
-                await message.add_reaction(emojis.PANDA_SAD)
-                return
             elif 'The legendary boss has not been defeated' in message_content:
                 await message.add_reaction(emojis.PEPE_LAUGH)
                 return
@@ -108,14 +86,6 @@ class EventsCog(commands.Cog):
                 await message.add_reaction(emojis.AWKWARD)
                 return
             elif 'Everyone got 1' in message_content and 'common lootbox' in message_content:
-                await message.add_reaction(emojis.PEPE_LAUGH)
-                return
-            elif ('common lootbox opened' in message_content and 'wooden log' in message_content
-                  and '+1' in message_content and message_content.count('<:') == 2):
-                await message.add_reaction(emojis.PEPE_LAUGH)
-                return
-            elif ('common lootbox opened' in message_content and 'normie fish' in message_content
-                  and '+1' in message_content and message_content.count('<:') == 2):
                 await message.add_reaction(emojis.PEPE_LAUGH)
                 return
 
