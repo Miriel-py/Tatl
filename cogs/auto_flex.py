@@ -54,7 +54,7 @@ class AutoFlexCog(commands.Cog):
             # Update current user TT
             if message.embeds:
                 embed = message.embeds[0]
-                search_strings = ['\'s profile', '\'s progress', '\'s time travel']
+                search_strings = ['— profile', '— progress', '— time travel']
                 if any(string in message_author.lower() for string in search_strings) and embed.fields:
                     icon_url = embed.author.icon_url
                     user_id = user_name = user = None
@@ -62,7 +62,7 @@ class AutoFlexCog(commands.Cog):
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
                         try:
-                            user_name = re.search("^(.+?)'s", embed.author.name).group(1)
+                            user_name = re.search("^(.+?) —", embed.author.name).group(1)
                             user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                         except Exception as error:
                             await message.add_reaction(emojis.WARNING)
@@ -216,7 +216,7 @@ class AutoFlexCog(commands.Cog):
                     return
                 event = 'gambling_coinflip'
                 logs.logger.info(message_content)
-            if "'s slots" in message_content.lower():
+            if "— slots" in message_content.lower():
                 icons = ['💎','💯','🎁','✨','🍀']
                 if any(message_content.lower().count(icon) == 5 for icon in icons):
                     winnings_start_string = 'You won **'
@@ -234,7 +234,7 @@ class AutoFlexCog(commands.Cog):
                         return
                     event = 'gambling_slots'
                     logs.logger.info(message_content)
-            if ("'s wheel" in message_content.lower()) and ('you won' in message_content.lower()):
+            if ("— wheel" in message_content.lower()) and ('you won' in message_content.lower()):
                 message_content_check = (message_content
                                          .encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                          .replace('U0001f7e6','').replace('U0001f7eb','').replace('U0001f7e7','')
@@ -566,8 +566,8 @@ async def get_work_watermelon_description(message_content: str, message: discord
 
 async def get_pet_ultra_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the pet_ultra event"""
-    user_name_end = message_content.find("'s pets")
-    user_name_start = message_content.rfind('"', 0, user_name_end) + 1
+    user_name_end = message_content.find(" — pets")
+    user_name_start = message_content.rfind("'", 0, user_name_end) + 1
     user_name = message_content[user_name_start:user_name_end]
 
     log_amount_total = 0
@@ -653,8 +653,8 @@ async def get_lb_100_description(message_content: str, message: discord.Message)
         'godly': emojis.LB_GODLY
     }
 
-    user_name_end = message_content.find("'s lootbox")
-    user_name_start = message_content.rfind('"', 0, user_name_end) + 1
+    user_name_end = message_content.find(" — lootbox")
+    user_name_start = message_content.rfind("'", 0, user_name_end) + 1
     user_name = message_content[user_name_start:user_name_end]
 
     lb_type_end = message_content.find(' lootbox opened!')
@@ -802,8 +802,8 @@ async def get_lb_godly_description(message_content: str, message: discord.Messag
 
 async def get_lb_edgy_ultra_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the lb_edgy_ultra event"""
-    user_name_end = message_content.find("'s lootbox")
-    user_name_start = message_content.rfind('"', 0, user_name_end) + 1
+    user_name_end = message_content.find(" — lootbox")
+    user_name_start = message_content.rfind("'", 0, user_name_end) + 1
     user_name = message_content[user_name_start:user_name_end]
 
     lb_amount_end = message_content.find(' <:ULTRA')
@@ -829,8 +829,8 @@ async def get_lb_edgy_ultra_description(message_content: str, message: discord.M
 
 async def get_lb_omega_ultra_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the lb_omega_ultra event"""
-    user_name_end = message_content.find("'s lootbox")
-    user_name_start = message_content.rfind('"', 0, user_name_end) + 1
+    user_name_end = message_content.find(" — lootbox")
+    user_name_start = message_content.rfind("'", 0, user_name_end) + 1
     user_name = message_content[user_name_start:user_name_end]
 
     lb_amount_end = message_content.find(' <:ULTRA')
@@ -857,8 +857,8 @@ async def get_lb_omega_ultra_description(message_content: str, message: discord.
 
 async def get_lb_godly_tt_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the lb_godly_tt event"""
-    user_name_end = message_content.find("'s lootbox")
-    user_name_start = message_content.rfind('"', 0, user_name_end) + 1
+    user_name_end = message_content.find(" — lootbox")
+    user_name_start = message_content.rfind("'", 0, user_name_end) + 1
     user_name = message_content[user_name_start:user_name_end]
 
     tt_amount_end = message_content.find(' <:timetravel')
@@ -933,8 +933,8 @@ async def get_pr_timetravel_description(message_content: str, message: discord.M
 
 async def get_gambling_coinflip_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the gambling_coinflip event"""
-    user_name_end = message_content.find("'s coinflip")
-    user_name_start = message_content.rfind('"', 0, user_name_end) + 1
+    user_name_end = message_content.find(" — coinflip")
+    user_name_start = message_content.rfind("'", 0, user_name_end) + 1
     user_name = message_content[user_name_start:user_name_end]
 
     winnings_start_string = 'YOU WON '
@@ -966,8 +966,8 @@ async def get_gambling_coinflip_description(message_content: str, message: disco
 
 async def get_gambling_slots_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the gambling_slots event"""
-    user_name_end = message_content.find("'s slots")
-    user_name_start = message_content.rfind('"', 0, user_name_end) + 1
+    user_name_end = message_content.find(" — slots")
+    user_name_start = message_content.rfind("'", 0, user_name_end) + 1
     user_name = message_content[user_name_start:user_name_end]
 
     winnings_start_string = 'You won **'
@@ -998,8 +998,8 @@ async def get_gambling_slots_description(message_content: str, message: discord.
 
 async def get_gambling_wheel_description(message_content: str, message: discord.Message) -> str:
     """Returns the embed description for the gambling_wheel event"""
-    user_name_end = message_content.find("'s wheel")
-    user_name_start = message_content.rfind('"', 0, user_name_end) + 1
+    user_name_end = message_content.find(" — wheel")
+    user_name_start = message_content.rfind("'", 0, user_name_end) + 1
     user_name = message_content[user_name_start:user_name_end]
 
     winnings_start_string = 'You won **'
