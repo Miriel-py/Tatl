@@ -15,11 +15,20 @@ class AutoFlexCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    @commands.Cog.listener()
+    async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
+        """Runs when a message is edited in a channel."""
+        for row in message_after.components:
+            for component in row.children:
+                if component.disabled:
+                    return
+        await self.on_message(message_after)
+
     # Events
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
-        if message.author.id in (settings.EPIC_RPG_ID, 619879176316649482):
+        if message.author.id == settings.EPIC_RPG_ID:
             if not message.embeds:
                 message_content = message.content
             else:
